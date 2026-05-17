@@ -1,0 +1,305 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Space Grotesk', 'Outfit', sans-serif; }
+  .wrap { background: #070707; min-height: 100vh; padding: 32px 24px; color: #F6F6FF; }
+  .section { margin-bottom: 40px; }
+  .sec-label { font-size: 10px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #9090A8; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid #1E1E2E; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 10px; }
+  .col { display: flex; flex-direction: column; gap: 10px; }
+
+  /* BUTTONS */
+  .btn { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; letter-spacing: 0.01em; }
+  .btn-sm  { padding: 6px 14px; border-radius: 10px; font-size: 12px; }
+  .btn-md  { padding: 9px 18px; border-radius: 12px; }
+  .btn-lg  { padding: 12px 24px; border-radius: 14px; font-size: 15px; }
+  .btn-primary { background: linear-gradient(135deg,#0A0A0F,#18111A); color: #F6F6FF; border: 1px solid #FF00FF; box-shadow: 0 0 10px rgba(255,0,255,0.18); }
+  .btn-primary:hover { background: linear-gradient(135deg,#14101E,#22152A); box-shadow: 0 0 20px rgba(255,0,255,0.32); transform: translateY(-1px); }
+  .btn-secondary { background: #722283; color: #F6F6FF; border: 1px solid transparent; }
+  .btn-secondary:hover { background: #8B2A9E; transform: translateY(-1px); }
+  .btn-accent { background: #01FAFB; color: #070707; font-weight: 700; border: 1px solid transparent; }
+  .btn-accent:hover { background: #33FBFC; box-shadow: 0 0 16px rgba(1,250,251,0.25); transform: translateY(-1px); }
+  .btn-ghost { background: transparent; color: #F6F6FF; border: 1px solid rgba(255,255,255,0.14); }
+  .btn-ghost:hover { background: rgba(255,255,255,0.05); }
+  .btn-danger { background: rgba(255,59,92,0.10); color: #FF3B5C; border: 1px solid #FF3B5C; }
+  .btn-disabled { background: #141420; color: #3A3A50; border: 1px solid rgba(255,255,255,0.06); cursor: not-allowed; opacity: 0.4; }
+
+  /* BADGES */
+  .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; padding: 3px 10px; border-radius: 9999px; border: 1px solid; }
+  .badge-success { background: rgba(0,230,118,0.10); color: #00E676; border-color: rgba(0,230,118,0.22); }
+  .badge-warning { background: rgba(255,179,0,0.10); color: #FFB300; border-color: rgba(255,179,0,0.22); }
+  .badge-danger  { background: rgba(255,59,92,0.10);  color: #FF3B5C; border-color: rgba(255,59,92,0.22); }
+  .badge-info    { background: rgba(1,250,251,0.10);  color: #01FAFB; border-color: rgba(1,250,251,0.22); }
+  .badge-neutral { background: #141420; color: #9090A8; border-color: rgba(255,255,255,0.08); }
+  .badge-brand   { background: rgba(255,0,255,0.10); color: #FF00FF; border-color: rgba(255,0,255,0.22); }
+
+  /* INPUTS */
+  .input-group { display: flex; flex-direction: column; gap: 6px; }
+  .input-label { font-size: 12px; font-weight: 500; color: #9090A8; }
+  .input { font-family: inherit; font-size: 14px; color: #F6F6FF; background: #0F0F18; border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 9px 14px; width: 220px; outline: none; transition: border-color 0.15s, box-shadow 0.15s; }
+  .input::placeholder { color: #3A3A50; }
+  .input:focus { border-color: #FF00FF; box-shadow: 0 0 0 3px rgba(255,0,255,0.12); }
+  .input.error { border-color: #FF3B5C; }
+  .hint { font-size: 11px; color: #3A3A50; }
+  .hint.err { color: #FF3B5C; }
+
+  /* CARDS */
+  .card { background: #0F0F18; border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 20px; transition: border-color 0.15s, box-shadow 0.15s; }
+  .card:hover { border-color: rgba(255,255,255,0.14); }
+  .card-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+  .card-body  { font-size: 13px; color: #9090A8; line-height: 1.6; }
+  .card-glow  { border-color: rgba(255,0,255,0.22); box-shadow: 0 0 24px rgba(255,0,255,0.10); }
+  .card-cyan  { border-color: rgba(1,250,251,0.20); box-shadow: 0 0 20px rgba(1,250,251,0.08); }
+  .cards-row  { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+
+  /* ALERTS */
+  .alert { display: flex; gap: 10px; padding: 12px 14px; border-radius: 12px; border: 1px solid; font-size: 13px; line-height: 1.5; margin-bottom: 8px; }
+  .alert-title { font-weight: 600; margin-bottom: 2px; font-size: 13px; }
+  .alert-success { background: rgba(0,230,118,0.07); border-color: rgba(0,230,118,0.20); color: #00E676; }
+  .alert-warning { background: rgba(255,179,0,0.07); border-color: rgba(255,179,0,0.20); color: #FFB300; }
+  .alert-danger  { background: rgba(255,59,92,0.07);  border-color: rgba(255,59,92,0.20);  color: #FF3B5C; }
+  .alert-info    { background: rgba(1,250,251,0.07);  border-color: rgba(1,250,251,0.20);  color: #01FAFB; }
+
+  /* COLORS */
+  .color-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.06); width: 90px; }
+  .chip-swatch { height: 48px; }
+  .chip-info { background: #0F0F18; padding: 6px 8px; }
+  .chip-name { font-size: 10px; font-weight: 600; color: #F6F6FF; }
+  .chip-hex  { font-family: monospace; font-size: 9px; color: #9090A8; }
+
+  /* TYPE */
+  .type-row { display: flex; align-items: baseline; gap: 16px; padding: 8px 0; border-bottom: 1px solid #1E1E2E; }
+  .type-meta { font-size: 10px; color: #3A3A50; font-family: monospace; min-width: 70px; }
+  .type-spec { font-size: 10px; color: #3A3A50; font-family: monospace; margin-left: auto; text-align: right; }
+
+  /* RADIUS */
+  .radius-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end; }
+  .rbox { background: #141420; border: 1px solid rgba(255,255,255,0.10); width: 60px; height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 6px; }
+  .rbox-label { font-size: 9px; color: #9090A8; font-family: monospace; text-align: center; margin-top: 6px; }
+
+  /* SHADOWS */
+  .shadow-row { display: flex; gap: 16px; flex-wrap: wrap; }
+  .sbox { background: #0F0F18; border-radius: 14px; width: 120px; height: 64px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #3A3A50; font-family: monospace; }
+
+  /* STATES */
+  .state-table { width: 100%; font-size: 12px; border-collapse: collapse; }
+  .state-table td { padding: 7px 10px; border-bottom: 1px solid #1E1E2E; color: #9090A8; }
+  .state-table td:first-child { color: #01FAFB; font-family: monospace; font-size: 11px; white-space: nowrap; }
+  .state-table td:last-child  { color: #3A3A50; font-family: monospace; font-size: 11px; }
+
+  /* ICONS */
+  .icon-row { display: flex; gap: 24px; align-items: flex-end; flex-wrap: wrap; }
+  .icon-item { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .icon-item svg { color: #9090A8; }
+  .icon-item:hover svg { color: #FF00FF; }
+  .icon-size { font-size: 10px; color: #3A3A50; font-family: monospace; }
+
+  /* MONO */
+  .mono-block { background: #0F0F18; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 14px 18px; font-family: monospace; font-size: 12px; color: #01FAFB; line-height: 1.8; }
+  .mono-comment { color: #3A3A50; }
+  .mono-key { color: #FF00FF; }
+  .mono-val { color: #F6F6FF; }
+</style>
+
+<div class="wrap">
+
+  <!-- BUTTONS -->
+  <div class="section">
+    <div class="sec-label">Botões</div>
+    <div class="row">
+      <button class="btn btn-primary btn-lg">Whatever It Takes →</button>
+      <button class="btn btn-primary btn-md">Get Started</button>
+      <button class="btn btn-primary btn-sm">Start</button>
+    </div>
+    <div class="row">
+      <button class="btn btn-secondary btn-md">Secondary</button>
+      <button class="btn btn-accent btn-md">Accent CTA</button>
+      <button class="btn btn-ghost btn-md">Ghost</button>
+      <button class="btn btn-danger btn-md">Deletar</button>
+      <button class="btn btn-disabled btn-md" disabled>Disabled</button>
+    </div>
+  </div>
+
+  <!-- BADGES -->
+  <div class="section">
+    <div class="sec-label">Badges & Status</div>
+    <div class="row">
+      <span class="badge badge-success">● Ativo</span>
+      <span class="badge badge-warning">● Atenção</span>
+      <span class="badge badge-danger">● Erro</span>
+      <span class="badge badge-info">● Info</span>
+      <span class="badge badge-brand">● Novo</span>
+      <span class="badge badge-neutral">Neutro</span>
+    </div>
+  </div>
+
+  <!-- INPUTS -->
+  <div class="section">
+    <div class="sec-label">Inputs</div>
+    <div class="row" style="align-items:flex-start">
+      <div class="input-group">
+        <div class="input-label">Email</div>
+        <input class="input" placeholder="bala@prisma.studio" />
+        <span class="hint">Texto de suporte</span>
+      </div>
+      <div class="input-group">
+        <div class="input-label">Campo com erro</div>
+        <input class="input error" value="valor inválido" />
+        <span class="hint err">Campo obrigatório</span>
+      </div>
+      <div class="input-group">
+        <div class="input-label">Focus state</div>
+        <input class="input" style="border-color:#FF00FF;box-shadow:0 0 0 3px rgba(255,0,255,0.12);" placeholder="Em foco" />
+        <span class="hint">ring: #FF00FF</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CARDS -->
+  <div class="section">
+    <div class="sec-label">Cards</div>
+    <div class="cards-row">
+      <div class="card">
+        <div class="card-title">Card Padrão</div>
+        <div class="card-body">Superfície padrão para conteúdo, seções ou features da interface.</div>
+      </div>
+      <div class="card card-glow">
+        <div class="card-title" style="color:#FF00FF">Card Destaque</div>
+        <div class="card-body">Para CTAs principais, planos e funcionalidades em foco.</div>
+      </div>
+      <div class="card card-cyan">
+        <div class="card-title" style="color:#01FAFB">Card Accent</div>
+        <div class="card-body">Info, novidades e notificações com acento ciano.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALERTS -->
+  <div class="section">
+    <div class="sec-label">Alerts</div>
+    <div class="alert alert-success"><div><div class="alert-title">Deploy realizado</div>Projeto publicado com sucesso em produção.</div></div>
+    <div class="alert alert-warning"><div><div class="alert-title">Escopo alterado</div>Mudanças devem ser documentadas no ClickUp.</div></div>
+    <div class="alert alert-danger"><div><div class="alert-title">Erro crítico</div>A operação falhou. Contate o responsável técnico.</div></div>
+    <div class="alert alert-info"><div><div class="alert-title">Diagnóstico obrigatório</div>Nunca envie proposta sem diagnóstico estratégico.</div></div>
+  </div>
+
+  <!-- COLORS -->
+  <div class="section">
+    <div class="sec-label">Paleta de Cores</div>
+    <div class="color-grid">
+      <div class="chip"><div class="chip-swatch" style="background:#FF00FF"></div><div class="chip-info"><div class="chip-name">Magenta</div><div class="chip-hex">#FF00FF</div></div></div>
+      <div class="chip"><div class="chip-swatch" style="background:#01FAFB"></div><div class="chip-info"><div class="chip-name">Cyan</div><div class="chip-hex">#01FAFB</div></div></div>
+      <div class="chip"><div class="chip-swatch" style="background:#722283"></div><div class="chip-info"><div class="chip-name">Purple</div><div class="chip-hex">#722283</div></div></div>
+      <div class="chip"><div class="chip-swatch" style="background:#1B1464"></div><div class="chip-info"><div class="chip-name">Indigo</div><div class="chip-hex">#1B1464</div></div></div>
+      <div class="chip"><div class="chip-swatch" style="background:#00E676"></div><div class="chip-info"><div class="chip-name">Success</div><div class="chip-hex">#00E676</div></div></div>
+      <div class="chip"><div class="chip-swatch" style="background:#FFB300"></div><div class="chip-info"><div class="chip-name">Warning</div><div class="chip-hex">#FFB300</div></div></div>
+      <div class="chip"><div class="chip-swatch" style="background:#FF3B5C"></div><div class="chip-info"><div class="chip-name">Danger</div><div class="chip-hex">#FF3B5C</div></div></div>
+      <div class="chip"><div class="chip-swatch" style="background:#0F0F18;border-bottom:1px solid #2a2a3a"></div><div class="chip-info"><div class="chip-name">Surface</div><div class="chip-hex">#0F0F18</div></div></div>
+      <div class="chip"><div class="chip-swatch" style="background:#9090A8"></div><div class="chip-info"><div class="chip-name">Text 2</div><div class="chip-hex">#9090A8</div></div></div>
+      <div class="chip"><div class="chip-swatch" style="background:#3A3A50"></div><div class="chip-info"><div class="chip-name">Disabled</div><div class="chip-hex">#3A3A50</div></div></div>
+    </div>
+  </div>
+
+  <!-- TIPOGRAFIA -->
+  <div class="section">
+    <div class="sec-label">Escala Tipográfica</div>
+    <div class="type-row"><span class="type-meta">caption/xs</span><span style="font-size:12px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#9090A8">LABEL · METADATA · BADGE</span><span class="type-spec">12px · w500 · lh1.50</span></div>
+    <div class="type-row"><span class="type-meta">body-sm</span><span style="font-size:14px;color:#9090A8">Texto de suporte, descrições e labels de formulário</span><span class="type-spec">14px · w400 · lh1.55</span></div>
+    <div class="type-row"><span class="type-meta">body</span><span style="font-size:16px">Texto corrido padrão para interfaces e conteúdo</span><span class="type-spec">16px · w400 · lh1.60</span></div>
+    <div class="type-row"><span class="type-meta">body-lg</span><span style="font-size:18px">Texto de introdução e lead paragraphs</span><span class="type-spec">18px · w400 · lh1.65</span></div>
+    <div class="type-row"><span class="type-meta">h5</span><span style="font-size:20px;font-weight:600">Subheading de seção</span><span class="type-spec">20px · w600 · lh1.40</span></div>
+    <div class="type-row"><span class="type-meta">h4</span><span style="font-size:24px;font-weight:600">Card Title Padrão</span><span class="type-spec">24px · w600 · lh1.30</span></div>
+    <div class="type-row"><span class="type-meta">h3</span><span style="font-size:30px;font-weight:700">Section Title</span><span class="type-spec">30px · w700 · lh1.20</span></div>
+    <div class="type-row"><span class="type-meta">h2</span><span style="font-size:40px;font-weight:700;letter-spacing:-0.02em">We Build.</span><span class="type-spec">48px · w700 · lh1.10</span></div>
+    <div class="type-row"><span class="type-meta">h1</span><span style="font-size:52px;font-weight:800;letter-spacing:-0.03em;color:#FF00FF">Whatever.</span><span class="type-spec">72px · w800 · lh1.05</span></div>
+  </div>
+
+  <!-- BORDER RADIUS -->
+  <div class="section">
+    <div class="sec-label">Border Radius</div>
+    <div class="radius-row">
+      <div><div class="rbox" style="border-radius:0px"></div><div class="rbox-label">none · 0px<br><span style="color:#FF3B5C">não usar</span></div></div>
+      <div><div class="rbox" style="border-radius:6px"></div><div class="rbox-label">sm · 6px<br>badges</div></div>
+      <div><div class="rbox" style="border-radius:12px"></div><div class="rbox-label">md · 12px<br>inputs/btns</div></div>
+      <div><div class="rbox" style="border-radius:16px"></div><div class="rbox-label">lg · 16px<br>cards</div></div>
+      <div><div class="rbox" style="border-radius:20px"></div><div class="rbox-label">xl · 20px<br>cards hero</div></div>
+      <div><div class="rbox" style="border-radius:24px"></div><div class="rbox-label">2xl · 24px<br>modais</div></div>
+      <div><div class="rbox" style="border-radius:9999px;width:80px;height:36px;align-self:center"></div><div class="rbox-label">full · 9999px<br>pills/avatares</div></div>
+    </div>
+  </div>
+
+  <!-- SHADOWS -->
+  <div class="section">
+    <div class="sec-label">Sombras & Elevation</div>
+    <div class="shadow-row">
+      <div><div class="sbox" style="box-shadow:0 1px 3px rgba(0,0,0,0.40),0 1px 2px rgba(0,0,0,0.30)">sm</div><div class="rbox-label" style="margin-top:6px">shadow-sm<br>inputs</div></div>
+      <div><div class="sbox" style="box-shadow:0 4px 16px rgba(0,0,0,0.50),0 2px 6px rgba(0,0,0,0.40)">md</div><div class="rbox-label" style="margin-top:6px">shadow-md<br>cards</div></div>
+      <div><div class="sbox" style="box-shadow:0 16px 48px rgba(0,0,0,0.60),0 6px 18px rgba(0,0,0,0.50)">lg</div><div class="rbox-label" style="margin-top:6px">shadow-lg<br>modais</div></div>
+      <div><div class="sbox" style="box-shadow:0 0 24px rgba(255,0,255,0.28);border:1px solid rgba(255,0,255,0.20)">glow M</div><div class="rbox-label" style="margin-top:6px">glow-magenta<br>CTA</div></div>
+      <div><div class="sbox" style="box-shadow:0 0 24px rgba(1,250,251,0.22);border:1px solid rgba(1,250,251,0.18)">glow C</div><div class="rbox-label" style="margin-top:6px">glow-cyan<br>accent</div></div>
+    </div>
+  </div>
+
+  <!-- ESTADOS -->
+  <div class="section">
+    <div class="sec-label">Estados Interativos</div>
+    <table class="state-table">
+      <tr><td>default</td><td style="color:#F6F6FF">Estado base — sem transformação</td><td>—</td></tr>
+      <tr><td>hover</td><td>Sobe 1px, clareia levemente</td><td>translateY(-1px) + rgba(255,255,255,0.05)</td></tr>
+      <tr><td>active</td><td>Retorna à posição base</td><td>translateY(0) + rgba(255,255,255,0.10)</td></tr>
+      <tr><td>focus-visible</td><td>Ring magenta — nunca remover</td><td>box-shadow: 0 0 0 2px #FF00FF</td></tr>
+      <tr><td>disabled</td><td>Reduz — nunca esconde</td><td>opacity: 0.38 · cursor: not-allowed</td></tr>
+      <tr><td>error</td><td>Border vermelha + hint</td><td>border: 1px solid #FF3B5C</td></tr>
+    </table>
+  </div>
+
+  <!-- ÍCONES -->
+  <div class="section">
+    <div class="sec-label">Ícones — Lucide · stroke 1.5</div>
+    <div class="icon-row">
+      <div class="icon-item">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        <span class="icon-size">16px · sm</span>
+      </div>
+      <div class="icon-item">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        <span class="icon-size">20px · md</span>
+      </div>
+      <div class="icon-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        <span class="icon-size">24px · lg</span>
+      </div>
+      <div class="icon-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span class="icon-size">24px · lg</span>
+      </div>
+      <div class="icon-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span class="icon-size">24px · lg</span>
+      </div>
+      <div class="icon-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span class="icon-size">24px · lg</span>
+      </div>
+      <div class="icon-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        <span class="icon-size">24px · lg</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MONO -->
+  <div class="section">
+    <div class="sec-label">Tipografia Mono — Outfit · código e dados</div>
+    <div class="mono-block">
+      <span class="mono-comment">// Prisma Studio · Product Builder</span><br>
+      <span class="mono-key">const</span> <span class="mono-val">client</span> = <span class="mono-key">new</span> PrismaStudio({<br>
+      &nbsp;&nbsp;project: <span style="color:#01FAFB">"product-builder-v2"</span>,<br>
+      &nbsp;&nbsp;stack: [<span style="color:#01FAFB">"next"</span>, <span style="color:#01FAFB">"supabase"</span>, <span style="color:#01FAFB">"vercel"</span>],<br>
+      &nbsp;&nbsp;status: <span style="color:#00E676">"in-progress"</span> <span class="mono-comment">// sprint 2</span><br>
+      });
+    </div>
+  </div>
+
+</div>

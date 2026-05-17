@@ -1,0 +1,129 @@
+@import "@fontsource-variable/space-grotesk";
+@import "@fontsource-variable/outfit";
+@import "@fontsource-variable/syne";
+@import "@fontsource-variable/jetbrains-mono";
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@theme {
+  /* Brand Colors */
+  --color-brand-magenta: #FF00FF;
+  --color-brand-cyan: #01FAFB;
+  --color-brand-cyan-hover: #33FBFC;
+  --color-secondary: #722283;
+  --color-secondary-hover: #8B2A9E;
+
+  /* Dark Mode Neutrals (default) */
+  --color-background: #070707;
+  --color-background-subtle: #0A0A0F;
+  --color-surface: #0F0F18;
+  --color-surface-elevated: #141420;
+  --color-surface-overlay: #1A1A28;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-hover: rgba(255, 255, 255, 0.14);
+  --color-foreground: #F6F6FF;
+  --color-foreground-secondary: #9090A8;
+  --color-foreground-disabled: #3A3A50;
+
+  /* Status Colors */
+  --color-success: #00E676;
+  --color-warning: #FFB300;
+  --color-danger: #FF3B5C;
+  --color-info: #01FAFB;
+
+  /* Typography */
+  --font-display: 'Space Grotesk Variable', sans-serif;
+  --font-body: 'Outfit Variable', sans-serif;
+  --font-mono: 'JetBrains Mono Variable', monospace;
+  --font-syne: 'Syne Variable', sans-serif;
+
+  /* Border Radius */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.40), 0 1px 2px rgba(0,0,0,0.30);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.50), 0 2px 6px rgba(0,0,0,0.40);
+  --shadow-lg: 0 16px 48px rgba(0,0,0,0.60), 0 6px 18px rgba(0,0,0,0.50);
+  --shadow-glow-magenta: 0 0 24px rgba(255, 0, 255, 0.25);
+  --shadow-glow-cyan: 0 0 24px rgba(1, 250, 251, 0.20);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    text-wrap: balance;
+  }
+}
+
+/* shadcn-svelte CSS variables — mapeadas para tokens Prisma */
+/* Direção: --shadcn-var → var(--color-prisma) — NUNCA o inverso */
+:root {
+  --background: var(--color-background);
+  --foreground: var(--color-foreground);
+
+  --card: var(--color-surface);
+  --card-foreground: var(--color-foreground);
+
+  --popover: var(--color-surface-overlay);
+  --popover-foreground: var(--color-foreground);
+
+  --primary: var(--color-brand-magenta);
+  --primary-foreground: var(--color-background);
+
+  --secondary: var(--color-surface-elevated);
+  --secondary-foreground: var(--color-foreground);
+
+  --muted: var(--color-surface-elevated);
+  --muted-foreground: var(--color-foreground-secondary);
+
+  --accent: var(--color-brand-cyan);
+  --accent-foreground: var(--color-background);
+
+  --destructive: var(--color-danger);
+  --destructive-foreground: var(--color-foreground);
+
+  --border: var(--color-border);
+  --input: var(--color-surface-overlay);
+  --ring: var(--color-brand-magenta);
+
+  --radius: var(--radius-md);
+}
+
+@custom-variant data-open (&:where([data-state="open"]), &:where([data-open]:not([data-open="false"])));
+@custom-variant data-closed (&:where([data-state="closed"]), &:where([data-closed]:not([data-closed="false"])));
+@custom-variant data-checked (&:where([data-state="checked"]), &:where([data-checked]:not([data-checked="false"])));
+@custom-variant data-unchecked (&:where([data-state="unchecked"]), &:where([data-unchecked]:not([data-unchecked="false"])));
+@custom-variant data-selected (&:where([data-selected]));
+@custom-variant data-disabled (&:where([data-disabled="true"]), &:where([data-disabled]:not([data-disabled="false"])));
+@custom-variant data-active (&:where([data-state="active"]), &:where([data-active]:not([data-active="false"])));
+@custom-variant data-horizontal (&:where([data-orientation="horizontal"]));
+@custom-variant data-vertical (&:where([data-orientation="vertical"]));
+
+@utility no-scrollbar {
+	-ms-overflow-style: none;
+	scrollbar-width: none;
+	&::-webkit-scrollbar {
+		display: none;
+  }
+}
