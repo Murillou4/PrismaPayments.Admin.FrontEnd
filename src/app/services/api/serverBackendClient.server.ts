@@ -12,6 +12,12 @@ const HOP_BY_HOP_HEADERS = new Set([
   'transfer-encoding',
   'upgrade'
 ]);
+const STRIPPED_RESPONSE_HEADERS = new Set([
+  ...HOP_BY_HOP_HEADERS,
+  'content-encoding',
+  'content-length',
+  'set-cookie'
+]);
 
 function getPrivateEnv(name: string): string {
   const runtime = globalThis as unknown as { process?: { env?: Record<string, string | undefined> } };
@@ -49,6 +55,7 @@ function createForwardHeaders(event: RequestEvent, accessToken: string | null, h
   const contentType = event.request.headers.get('content-type');
 
   if (accept) headers.set('accept', accept);
+  headers.set('accept-encoding', 'identity');
   if (hasBody && contentType) headers.set('content-type', contentType);
   const clientSecret = getPrivateEnv('PRIVATE_CLIENT_SECRET');
   if (clientSecret) {
@@ -92,7 +99,7 @@ async function forward(
 
   const headers = new Headers();
   response.headers.forEach((value, key) => {
-    if (!HOP_BY_HOP_HEADERS.has(key.toLowerCase()) && key.toLowerCase() !== 'set-cookie') {
+    if (!STRIPPED_RESPONSE_HEADERS.has(key.toLowerCase())) {
       headers.set(key, value);
     }
   });

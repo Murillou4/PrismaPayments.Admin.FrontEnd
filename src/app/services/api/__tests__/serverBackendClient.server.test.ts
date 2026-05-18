@@ -83,10 +83,49 @@ describe('server backend proxy', () => {
     expect(fetchMock.mock.calls[0][0]).toBe('https://backend.test/api/v1/admin/merchants?limit=10');
     expect(fetchMock.mock.calls[1][0]).toBe('https://backend.test/api/v1/auth/admin/refresh');
     expect((fetchMock.mock.calls[0][1].headers as Headers).get('authorization')).toBe('Bearer old_access');
+    expect((fetchMock.mock.calls[0][1].headers as Headers).get('accept-encoding')).toBe('identity');
     expect((fetchMock.mock.calls[2][1].headers as Headers).get('authorization')).toBe('Bearer new_access');
     expect((fetchMock.mock.calls[2][1].headers as Headers).get('client-secret')).toBe('secret');
     expect(cookies.get('access_token')).toBe('new_access');
     expect(cookies.get('refresh_token')).toBe('new_refresh');
+  });
+
+  it('remove headers de compressao antes de responder ao browser', async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce(new Response(
+      JSON.stringify({
+        responseType: 'OK',
+        message: 'ok',
+        title: 'OK',
+        status: 200,
+        data: { items: [], total: 0 },
+        extendedResultCode: 'OK',
+        date: new Date().toISOString()
+      }),
+      {
+        status: 200,
+        headers: {
+          'content-type': 'application/json',
+          'content-encoding': 'gzip',
+          'content-length': '999',
+          'set-cookie': 'backend_cookie=1'
+        }
+      }
+    ));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const cookies = createCookieJar({
+      access_token: 'access'
+    });
+
+    const response = await proxyBackendRequest(createEvent(cookies), '/api/v1/admin/merchants');
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toContain('application/json');
+    expect(response.headers.get('content-encoding')).toBeNull();
+    expect(response.headers.get('content-length')).toBeNull();
+    expect(response.headers.get('set-cookie')).toBeNull();
+    expect(body.data).toEqual({ items: [], total: 0 });
   });
 
   it('limpa cookies quando refresh falha depois de 401', async () => {
