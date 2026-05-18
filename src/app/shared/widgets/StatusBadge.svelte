@@ -52,15 +52,21 @@
   const variant = $derived(STATUS_MAP[status?.toUpperCase()] ?? DEFAULT_VARIANT);
 </script>
 
-<Badge
-  variant="outline"
-  class={variant.isMed ? 'status-badge status-badge--med' : 'status-badge'}
-  style="color: {variant.color}; background: {variant.background}; border-color: {variant.border};"
->
-  {status}
-</Badge>
+<span class="status-badge-frame">
+  <Badge
+    variant="outline"
+    class={variant.isMed ? 'status-badge status-badge--med' : 'status-badge'}
+    style="color: {variant.color}; background: {variant.background}; border-color: {variant.border};"
+  >
+    {status}
+  </Badge>
+</span>
 
 <style>
+  .status-badge-frame {
+    display: inline-flex;
+  }
+
   :global(.status-badge) {
     border-radius: 9999px;
     padding: 4px 10px;
