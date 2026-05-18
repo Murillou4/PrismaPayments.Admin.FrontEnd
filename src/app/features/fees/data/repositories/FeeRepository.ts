@@ -1,6 +1,7 @@
 import type { Either, Failure } from '$core/error/Failure';
 import { apiClient } from '$appmod/services/api/apiClient';
 import { apiResponseToEither } from '$appmod/services/api/apiResponse';
+import { normalizeCollectionResponse } from '$appmod/services/api/responseNormalizers';
 import { API_PATHS } from '$core/constants/apiPaths';
 import type {
   FeeRule,
@@ -12,9 +13,13 @@ import type {
 
 export class FeeRepository {
   async list(page = 1, pageSize = 20): Promise<Either<Failure, FeeRuleList>> {
-    return apiResponseToEither(
-      await apiClient.get<FeeRuleList>(API_PATHS.FEES_RULES, { page, pageSize })
+    const result = apiResponseToEither<unknown>(
+      await apiClient.get<unknown>(API_PATHS.FEES_RULES, { page, pageSize })
     );
+
+    return result.ok
+      ? { ok: true, value: normalizeCollectionResponse<FeeRule>(result.value, { page, pageSize, limit: pageSize }) }
+      : result;
   }
 
   async create(payload: FeeRulePayload): Promise<Either<Failure, FeeRule>> {

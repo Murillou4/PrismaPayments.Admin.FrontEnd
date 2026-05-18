@@ -3,6 +3,7 @@ import { apiClient } from '$appmod/services/api/apiClient';
 import { API_PATHS } from '$core/constants/apiPaths';
 import { adminQueryKeys } from '$appmod/services/cache/adminQueryKeys';
 import { executeAdminMutation, fetchAdminQuery } from '$appmod/services/cache/adminQuery';
+import { normalizeCollectionResponse } from '$appmod/services/api/responseNormalizers';
 import type { IMerchantRepository } from '../../domain/repositories/IMerchantRepository';
 import type {
   PaginatedMerchants,
@@ -10,6 +11,7 @@ import type {
   MerchantDocument,
   MerchantCredential,
   MerchantCredentialCreated,
+  MerchantListItem,
   Tenant,
   CreateMerchantPayload,
   MerchantStatusUpdate,
@@ -19,15 +21,26 @@ import type {
   ListMerchantsParams
 } from '../../domain/entities/Merchant';
 
+export function normalizePaginatedMerchantsResponse(
+  value: unknown,
+  fallbackSkip: number,
+  fallbackLimit: number
+): PaginatedMerchants {
+  return normalizeCollectionResponse<MerchantListItem>(value, {
+    skip: fallbackSkip,
+    limit: fallbackLimit
+  });
+}
+
 export class MerchantRepository implements IMerchantRepository {
   async listMerchants(params: ListMerchantsParams): Promise<Either<Failure, PaginatedMerchants>> {
     const page = params.page ?? 1;
     const limit = params.limit ?? 20;
     const skip = (page - 1) * limit;
 
-    return fetchAdminQuery(
+    const result = await fetchAdminQuery(
       adminQueryKeys.merchants.list(params),
-      () => apiClient.get<PaginatedMerchants>(API_PATHS.ADMIN_MERCHANTS, {
+      () => apiClient.get<unknown>(API_PATHS.ADMIN_MERCHANTS, {
         skip,
         limit,
         status: params.status && params.status !== 'ALL' ? params.status : undefined,
@@ -35,6 +48,10 @@ export class MerchantRepository implements IMerchantRepository {
         search: params.search
       })
     );
+
+    return result.ok
+      ? { ok: true, value: normalizePaginatedMerchantsResponse(result.value, skip, limit) }
+      : result;
   }
 
   async getById(id: string): Promise<Either<Failure, Merchant>> {

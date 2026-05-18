@@ -90,8 +90,8 @@
       return;
     }
 
-    items = listResult.value.items;
-    total = listResult.value.total;
+    items = listResult.value.items ?? [];
+    total = listResult.value.total ?? items.length;
     if (statsResult.ok) stats = statsResult.value;
     selected = null;
     traceItems = [];
@@ -125,7 +125,7 @@
       return;
     }
 
-    traceItems = result.value;
+    traceItems = result.value ?? [];
   }
 
   async function loadFlow(flowId?: string | null) {
@@ -148,7 +148,7 @@
 
     flowGraph = result.value;
     flowInput = result.value.flowId;
-    selectedFlowNodeId = result.value.nodes[0]?.id ?? null;
+    selectedFlowNodeId = result.value.nodes?.[0]?.id ?? null;
   }
 
   async function purgeLogs() {

@@ -1,6 +1,7 @@
 import type { Either, Failure } from '$core/error/Failure';
 import { apiClient } from '$appmod/services/api/apiClient';
 import { apiResponseToEither } from '$appmod/services/api/apiResponse';
+import { normalizeCollectionResponse } from '$appmod/services/api/responseNormalizers';
 import { API_PATHS } from '$core/constants/apiPaths';
 import type {
   ListTenantsParams,
@@ -30,13 +31,18 @@ export class TenantRepository {
   async list(params: ListTenantsParams = {}): Promise<Either<Failure, TenantCollection>> {
     const limit = params.limit ?? 20;
     const page = params.page ?? 1;
-    return apiResponseToEither(
-      await apiClient.get<TenantCollection>(API_PATHS.ADMIN_TENANTS, {
-        skip: (page - 1) * limit,
+    const skip = (page - 1) * limit;
+    const result = apiResponseToEither<unknown>(
+      await apiClient.get<unknown>(API_PATHS.ADMIN_TENANTS, {
+        skip,
         limit,
         status: params.status || undefined
       })
     );
+
+    return result.ok
+      ? { ok: true, value: normalizeCollectionResponse<Tenant>(result.value, { skip, limit }) }
+      : result;
   }
 
   async getById(id: string): Promise<Either<Failure, Tenant>> {

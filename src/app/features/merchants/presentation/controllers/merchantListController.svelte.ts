@@ -52,9 +52,11 @@ export function createMerchantListController() {
 
     const result = await service.listMerchants(params);
     if (result.ok) {
-      state.merchants = result.value.items;
-      state.total = result.value.total;
+      state.merchants = result.value.items ?? [];
+      state.total = result.value.total ?? state.merchants.length;
     } else {
+      state.merchants = [];
+      state.total = 0;
       state.error = result.failure.message;
     }
     state.loading = false;

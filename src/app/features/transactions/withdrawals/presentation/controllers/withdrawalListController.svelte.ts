@@ -47,9 +47,11 @@ export function createWithdrawalListController() {
 
     const result = await service.listWithdrawals(params);
     if (result.ok) {
-      state.withdrawals = result.value.items;
-      state.total = result.value.total;
+      state.withdrawals = result.value.items ?? [];
+      state.total = result.value.total ?? state.withdrawals.length;
     } else {
+      state.withdrawals = [];
+      state.total = 0;
       state.error = result.failure.message;
     }
     state.loading = false;

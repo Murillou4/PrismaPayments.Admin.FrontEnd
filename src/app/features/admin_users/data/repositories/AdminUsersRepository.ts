@@ -1,6 +1,7 @@
 import type { Either, Failure } from '$core/error/Failure';
 import { apiClient } from '$appmod/services/api/apiClient';
 import { apiResponseToEither } from '$appmod/services/api/apiResponse';
+import { normalizeCollectionResponse } from '$appmod/services/api/responseNormalizers';
 import { API_PATHS } from '$core/constants/apiPaths';
 import type { IAdminUsersRepository } from '../../domain/repositories/IAdminUsersRepository';
 import type {
@@ -15,12 +16,17 @@ export class AdminUsersRepository implements IAdminUsersRepository {
   async list(params: ListAdminUsersParams = {}): Promise<Either<Failure, AdminUserCollection>> {
     const limit = params.limit ?? 20;
     const page = params.page ?? 1;
-    return apiResponseToEither(
-      await apiClient.get<AdminUserCollection>(API_PATHS.ADMIN_USERS, {
-        skip: (page - 1) * limit,
+    const skip = (page - 1) * limit;
+    const result = apiResponseToEither<unknown>(
+      await apiClient.get<unknown>(API_PATHS.ADMIN_USERS, {
+        skip,
         limit
       })
     );
+
+    return result.ok
+      ? { ok: true, value: normalizeCollectionResponse<AdminUser>(result.value, { skip, limit }) }
+      : result;
   }
 
   async create(payload: CreateAdminUserPayload): Promise<Either<Failure, AdminUser>> {

@@ -38,9 +38,9 @@
       return;
     }
 
-    items = result.value.items;
-    total = result.value.total;
-    selected = result.value.items[0] ?? null;
+    items = result.value.items ?? [];
+    total = result.value.total ?? items.length;
+    selected = items[0] ?? null;
   }
 
   $effect(() => {

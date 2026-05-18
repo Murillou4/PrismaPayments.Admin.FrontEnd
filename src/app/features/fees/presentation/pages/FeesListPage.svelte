@@ -99,8 +99,8 @@
       return;
     }
 
-    items = result.value.items;
-    total = result.value.total;
+    items = result.value.items ?? [];
+    total = result.value.total ?? items.length;
   }
 
   async function saveRule() {

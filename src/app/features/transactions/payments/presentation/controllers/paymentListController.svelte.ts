@@ -51,9 +51,11 @@ export function createPaymentListController() {
 
     const result = await service.listPayments(params);
     if (result.ok) {
-      state.payments = result.value.items;
-      state.total = result.value.total;
+      state.payments = result.value.items ?? [];
+      state.total = result.value.total ?? state.payments.length;
     } else {
+      state.payments = [];
+      state.total = 0;
       state.error = result.failure.message;
     }
     state.loading = false;

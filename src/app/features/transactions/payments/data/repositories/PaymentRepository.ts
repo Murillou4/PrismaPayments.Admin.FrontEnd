@@ -3,6 +3,7 @@ import { apiClient } from '$appmod/services/api/apiClient';
 import { API_PATHS } from '$core/constants/apiPaths';
 import { adminQueryKeys } from '$appmod/services/cache/adminQueryKeys';
 import { fetchAdminQuery } from '$appmod/services/cache/adminQuery';
+import { normalizeCollectionResponse } from '$appmod/services/api/responseNormalizers';
 import type { IPaymentRepository } from '../../domain/repositories/IPaymentRepository';
 import type {
   PaginatedPayments,
@@ -16,9 +17,9 @@ export class PaymentRepository implements IPaymentRepository {
     const limit = params.limit ?? 20;
     const skip = (page - 1) * limit;
 
-    return fetchAdminQuery(
+    const result = await fetchAdminQuery(
       adminQueryKeys.payments.list(params),
-      () => apiClient.get<PaginatedPayments>(API_PATHS.ADMIN_PAYMENTS, {
+      () => apiClient.get<unknown>(API_PATHS.ADMIN_PAYMENTS, {
         skip,
         limit,
         merchantId: params.merchantId,
@@ -26,6 +27,10 @@ export class PaymentRepository implements IPaymentRepository {
         method: params.method
       })
     );
+
+    return result.ok
+      ? { ok: true, value: normalizeCollectionResponse<Payment>(result.value, { skip, limit }) }
+      : result;
   }
 
   async getById(id: string): Promise<Either<Failure, Payment>> {

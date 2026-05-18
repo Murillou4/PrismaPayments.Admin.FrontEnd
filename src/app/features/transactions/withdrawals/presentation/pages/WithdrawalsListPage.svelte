@@ -37,7 +37,7 @@
 
   // D-19: client-side date filter applied after API response
   const tableData = $derived(() => {
-    let data = ctrl.state.withdrawals;
+    let data = ctrl.state.withdrawals ?? [];
     if (ctrl.state.dateStart && ctrl.state.dateEnd) {
       const start = new Date(ctrl.state.dateStart).getTime();
       const end   = new Date(ctrl.state.dateEnd).getTime() + 86400000; // include end day

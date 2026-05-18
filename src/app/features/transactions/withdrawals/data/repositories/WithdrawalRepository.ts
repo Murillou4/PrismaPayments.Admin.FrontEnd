@@ -3,6 +3,7 @@ import { apiClient } from '$appmod/services/api/apiClient';
 import { API_PATHS } from '$core/constants/apiPaths';
 import { adminQueryKeys } from '$appmod/services/cache/adminQueryKeys';
 import { fetchAdminQuery } from '$appmod/services/cache/adminQuery';
+import { normalizeCollectionResponse } from '$appmod/services/api/responseNormalizers';
 import type { IWithdrawalRepository } from '../../domain/repositories/IWithdrawalRepository';
 import type {
   PaginatedWithdrawals,
@@ -16,15 +17,19 @@ export class WithdrawalRepository implements IWithdrawalRepository {
     const limit = params.limit ?? 20;
     const skip = (page - 1) * limit;
 
-    return fetchAdminQuery(
+    const result = await fetchAdminQuery(
       adminQueryKeys.withdrawals.list(params),
-      () => apiClient.get<PaginatedWithdrawals>(API_PATHS.ADMIN_WITHDRAWALS, {
+      () => apiClient.get<unknown>(API_PATHS.ADMIN_WITHDRAWALS, {
         skip,
         limit,
         merchantId: params.merchantId,
         status: params.status
       })
     );
+
+    return result.ok
+      ? { ok: true, value: normalizeCollectionResponse<Withdrawal>(result.value, { skip, limit }) }
+      : result;
   }
 
   async getById(id: string): Promise<Either<Failure, Withdrawal>> {

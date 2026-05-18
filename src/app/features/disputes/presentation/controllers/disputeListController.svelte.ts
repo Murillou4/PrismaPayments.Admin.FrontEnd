@@ -37,9 +37,11 @@ export function createDisputeListController() {
     if (state.merchantId)  params.merchantId  = state.merchantId;
     const result = await service.listDisputes(params);
     if (result.ok) {
-      state.disputes = result.value.items;
-      state.total    = result.value.total;
+      state.disputes = result.value.items ?? [];
+      state.total = result.value.total ?? state.disputes.length;
     } else {
+      state.disputes = [];
+      state.total = 0;
       state.error = result.failure.message;
     }
     state.loading = false;
