@@ -1,5 +1,6 @@
 @import "@fontsource-variable/space-grotesk";
 @import "@fontsource-variable/outfit";
+@import "@fontsource-variable/onest";
 @import "@fontsource-variable/syne";
 @import "@fontsource-variable/jetbrains-mono";
 @import "tailwindcss";
@@ -34,6 +35,7 @@
   /* Typography */
   --font-display: 'Space Grotesk Variable', sans-serif;
   --font-body: 'Outfit Variable', sans-serif;
+  --font-onest: 'Onest Variable', sans-serif;
   --font-mono: 'JetBrains Mono Variable', monospace;
   --font-syne: 'Syne Variable', sans-serif;
 
