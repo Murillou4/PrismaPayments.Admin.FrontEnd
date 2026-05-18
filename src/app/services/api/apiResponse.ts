@@ -2,6 +2,7 @@ import {
   ForbiddenFailure,
   NetworkFailure,
   NotFoundFailure,
+  RateLimitFailure,
   ServerFailure,
   UnauthorizedFailure,
   ValidationFailure,
@@ -19,6 +20,7 @@ export type ResponseType =
   | 'UNAUTHORIZED'
   | 'FORBIDDEN'
   | 'NOT_FOUND'
+  | 'TOO_MANY_REQUESTS'
   | 'INTERNAL_SERVER_ERROR'
   | (string & {});
 
@@ -60,8 +62,15 @@ function responseTypeFromStatus(status: number): ResponseType {
   if (status === 401) return 'UNAUTHORIZED';
   if (status === 403) return 'FORBIDDEN';
   if (status === 404) return 'NOT_FOUND';
+  if (status === 429) return 'TOO_MANY_REQUESTS';
   if (status >= 200 && status < 300) return 'OK';
   return 'INTERNAL_SERVER_ERROR';
+}
+
+function messageFromStatus(status: number): string {
+  if (status === 429) return 'Muitas requisicoes. Aguarde alguns segundos e tente novamente.';
+  if (status >= 500) return 'Erro interno do servidor.';
+  return 'Falha ao conectar. Tente novamente.';
 }
 
 export function createApiResponse<T>(
@@ -109,9 +118,9 @@ export function parseApiResponse<T>(
 
   return createApiResponse<T>(
     status,
-    options.fallbackMessage ?? 'Falha ao conectar. Tente novamente.',
+    options.fallbackMessage ?? messageFromStatus(status),
     null,
-    'PARSE_ERROR'
+    responseTypeFromStatus(status)
   );
 }
 
@@ -147,6 +156,10 @@ export function isServerError(response: ApiResponse<unknown>): boolean {
   return response.status >= 500;
 }
 
+export function isRateLimited(response: ApiResponse<unknown>): boolean {
+  return response.status === 429;
+}
+
 export function failureFromApiResponse(response: ApiResponse<unknown>): Failure {
   if (response.status === 0) {
     return new NetworkFailure(response.message);
@@ -159,6 +172,9 @@ export function failureFromApiResponse(response: ApiResponse<unknown>): Failure 
   }
   if (isNotFound(response)) {
     return new NotFoundFailure(response.message);
+  }
+  if (isRateLimited(response)) {
+    return new RateLimitFailure(response.message);
   }
   if (isBadRequest(response)) {
     return new ValidationFailure(response.message);

@@ -5,7 +5,7 @@
   import PaymentMethodCard from '../components/PaymentMethodCard.svelte';
   import Breadcrumbs from '$appmod/shared/widgets/Breadcrumbs.svelte';
   import StatusBadge from '$appmod/shared/widgets/StatusBadge.svelte';
-  import { formatCurrency, formatDate } from '$appmod/shared/utils/formatters';
+  import { formatCurrency, formatDate, formatShortId } from '$appmod/shared/utils/formatters';
 
   interface Props {
     paymentId: string;
@@ -45,7 +45,7 @@
       segments={[
         { label: 'Transacoes', href: '/transactions/payments' },
         { label: 'Pagamentos', href: '/transactions/payments' },
-        { label: `#${paymentId.substring(0, 8)}` },
+        { label: `#${formatShortId(paymentId)}` },
       ]}
     />
   </div>
@@ -236,7 +236,7 @@
               class="field-value"
               style="color: var(--color-brand-cyan, #01FAFB); text-decoration: none; display: block; margin-top: 4px;"
             >
-              {payment.merchantId.substring(0, 8)}
+              {formatShortId(payment.merchantId)}
             </a>
           </div>
 

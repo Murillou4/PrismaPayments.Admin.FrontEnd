@@ -10,7 +10,7 @@
   import MerchantAutocomplete from '$appmod/features/transactions/shared/components/MerchantAutocomplete.svelte';
   import Breadcrumbs from '$appmod/shared/widgets/Breadcrumbs.svelte';
   import { Button } from '$lib/components/ui/button';
-  import { formatCurrency, formatDate } from '$appmod/shared/utils/formatters';
+  import { formatCurrency, formatDate, formatShortId } from '$appmod/shared/utils/formatters';
   import type { Dispute } from '$appmod/features/disputes/domain/entities/Dispute';
 
   let { role }: { role: string | null } = $props();
@@ -115,12 +115,12 @@
       data={ctrl.state.disputes}
       loading={ctrl.state.loading}
       rowClass={getRowClass}
-      onRowClick={(row) => goto(`/disputes/${row.original.id}`)}
+      onRowClick={(row) => { if (row.original.id) goto(`/disputes/${row.original.id}`); }}
     >
       {#snippet cellSnippet({ row, columnId })}
         {#if columnId === 'id'}
           <span style="font-family: var(--font-mono); font-size: 0.8125rem; color: var(--color-foreground-secondary, #9090A8);">
-            #{row.original.id.substring(0, 8)}
+            #{formatShortId(row.original.id)}
           </span>
         {:else if columnId === 'merchantId'}
           <a
@@ -130,7 +130,7 @@
             onmouseenter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
             onmouseleave={(e) => (e.currentTarget.style.textDecoration = 'none')}
           >
-            {row.original.merchantId.substring(0, 8)}...
+            {formatShortId(row.original.merchantId)}
           </a>
         {:else if columnId === 'disputeType'}
           <StatusBadge status={row.original.disputeType} />

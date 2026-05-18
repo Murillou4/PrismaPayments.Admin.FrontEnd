@@ -4,7 +4,7 @@
   import { createWithdrawalDetailController } from '../controllers/withdrawalDetailController.svelte';
   import Breadcrumbs from '$appmod/shared/widgets/Breadcrumbs.svelte';
   import StatusBadge from '$appmod/shared/widgets/StatusBadge.svelte';
-  import { formatCurrency, formatDate } from '$appmod/shared/utils/formatters';
+  import { formatCurrency, formatDate, formatShortId } from '$appmod/shared/utils/formatters';
 
   interface Props {
     withdrawalId: string;
@@ -24,7 +24,7 @@
     <Breadcrumbs segments={[
       { label: 'Transacoes', href: '/transactions/withdrawals' },
       { label: 'Saques', href: '/transactions/withdrawals' },
-      { label: `#${withdrawalId.substring(0, 8)}` }
+      { label: `#${formatShortId(withdrawalId)}` }
     ]} />
   </div>
 
@@ -70,7 +70,7 @@
           <span class="field-label">Merchant</span>
           <span class="field-value">
             <a href="/merchants/{w.merchantId}" class="link-merchant">
-              {w.merchantId.slice(0, 8)}...
+              {formatShortId(w.merchantId)}
             </a>
           </span>
         </div>
@@ -129,19 +129,19 @@
       <div class="field-grid">
         <div class="field">
           <span class="field-label">Chave PIX</span>
-          <span class="field-value field-value--mono">{w.recipient.pixKey}</span>
+          <span class="field-value field-value--mono">{w.recipient?.pixKey || '-'}</span>
         </div>
         <div class="field">
           <span class="field-label">Tipo da chave</span>
-          <span class="field-value">{w.recipient.pixKeyType}</span>
+          <span class="field-value">{w.recipient?.pixKeyType || '-'}</span>
         </div>
         <div class="field">
           <span class="field-label">Nome</span>
-          <span class="field-value">{w.recipient.name}</span>
+          <span class="field-value">{w.recipient?.name || '-'}</span>
         </div>
         <div class="field">
           <span class="field-label">Documento</span>
-          <span class="field-value field-value--mono">{w.recipient.documentNumber}</span>
+          <span class="field-value field-value--mono">{w.recipient?.documentNumber || '-'}</span>
         </div>
       </div>
     </div>

@@ -2,7 +2,7 @@ import { QueryClient, type QueryKey } from '@tanstack/svelte-query';
 import { failureFromApiResponse, type ApiResponse } from '$appmod/services/api/apiResponse';
 import { Failure } from '$core/error/Failure';
 
-const NON_RETRYABLE_STATUS = new Set([400, 401, 403, 404]);
+const NON_RETRYABLE_STATUS = new Set([400, 401, 403, 404, 409, 429]);
 
 function isApiResponse(value: unknown): value is ApiResponse<unknown> {
   return (
@@ -28,7 +28,7 @@ export const queryClient = new QueryClient({
           return false;
         }
         if (isFailure(error)) {
-          return !['UNAUTHORIZED', 'FORBIDDEN', 'NOT_FOUND', 'VALIDATION_ERROR'].includes(error.code ?? '') &&
+          return !['UNAUTHORIZED', 'FORBIDDEN', 'NOT_FOUND', 'VALIDATION_ERROR', 'RATE_LIMITED'].includes(error.code ?? '') &&
             failureCount < 2;
         }
         if (error instanceof Error && NON_RETRYABLE_STATUS.has(Number(error.name))) {

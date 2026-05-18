@@ -11,7 +11,7 @@
   import MerchantAutocomplete from '$appmod/features/transactions/shared/components/MerchantAutocomplete.svelte';
   import DateRangePicker from '$appmod/shared/widgets/filters/DateRangePicker.svelte';
   import { Button } from '$lib/components/ui/button';
-  import { formatCurrency, formatDate } from '$appmod/shared/utils/formatters';
+  import { formatCurrency, formatDate, formatShortId } from '$appmod/shared/utils/formatters';
   import type { Withdrawal } from '$appmod/features/transactions/withdrawals/domain/entities/Withdrawal';
 
   const ctrl = createWithdrawalListController();
@@ -64,7 +64,7 @@
   });
 
   function handleRowClick(row: Row<Withdrawal>) {
-    goto(`/transactions/withdrawals/${row.original.id}`);
+    if (row.original.id) goto(`/transactions/withdrawals/${row.original.id}`);
   }
 </script>
 
@@ -181,7 +181,7 @@
       style="color: var(--color-brand-cyan, #01FAFB); text-decoration: none; font-variant-numeric: tabular-nums;"
       onclick={(e) => e.stopPropagation()}
     >
-      {row.original.id.slice(0, 8)}...
+      {formatShortId(row.original.id)}
     </a>
   {:else if columnId === 'merchantId'}
     <a
@@ -189,7 +189,7 @@
       style="color: var(--color-brand-cyan, #01FAFB); text-decoration: none;"
       onclick={(e) => e.stopPropagation()}
     >
-      {row.original.merchantId.slice(0, 8)}...
+      {formatShortId(row.original.merchantId)}
     </a>
   {:else if columnId === 'status'}
     <StatusBadge status={row.original.status} />
@@ -199,7 +199,7 @@
     </span>
   {:else if columnId === 'pixKey'}
     <span style="font-family: 'Outfit', sans-serif; font-size: 12px; color: #9090A8;">
-      {row.original.recipient.pixKey.substring(0, 12)}...
+      {formatShortId(row.original.recipient?.pixKey, 12)}
     </span>
   {:else if columnId === 'createdAt'}
     {formatDate(row.original.createdAt)}

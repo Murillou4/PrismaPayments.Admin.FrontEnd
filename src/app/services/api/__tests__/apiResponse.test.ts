@@ -46,4 +46,20 @@ describe('apiResponse parser', () => {
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.failure.code).toBe('NETWORK_ERROR');
   });
+
+  it('representa 429 como RATE_LIMITED para nao acionar retry generico', () => {
+    const parsed = parseApiResponse<unknown>({
+      responseType: 'TOO_MANY_REQUESTS',
+      message: 'Muitas requisicoes.',
+      title: 'TOO_MANY_REQUESTS',
+      status: 429,
+      data: null,
+      extendedResultCode: 'TOO_MANY_REQUESTS',
+      date: '2026-05-18T00:00:00.000Z'
+    }, 429);
+    const result = apiResponseToEither(parsed);
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.failure.code).toBe('RATE_LIMITED');
+  });
 });

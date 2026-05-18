@@ -1,8 +1,9 @@
 export function formatCurrency(cents: number): string {
+  const safeCents = Number.isFinite(cents) ? cents : 0;
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL'
-  }).format(cents / 100);
+  }).format(safeCents / 100);
 }
 
 export function formatDate(iso: string | undefined | null): string {
@@ -25,9 +26,17 @@ export function formatDocument(doc: string | undefined | null, type: 'CPF' | 'CN
 }
 
 export function formatBasisPoints(bp: number): string {
-  return `${(bp / 100).toFixed(2).replace('.', ',')}%`;
+  const safeBp = Number.isFinite(bp) ? bp : 0;
+  return `${(safeBp / 100).toFixed(2).replace('.', ',')}%`;
 }
 
 export function formatPercentage(value: number): string {
-  return `${value.toFixed(2).replace('.', ',')}%`;
+  const safeValue = Number.isFinite(value) ? value : 0;
+  return `${safeValue.toFixed(2).replace('.', ',')}%`;
+}
+
+export function formatShortId(value: unknown, size = 8): string {
+  const text = typeof value === 'string' ? value : '';
+  if (!text) return '-';
+  return text.length > size ? `${text.slice(0, size)}...` : text;
 }

@@ -35,6 +35,12 @@ export class ValidationFailure extends Failure {
   }
 }
 
+export class RateLimitFailure extends Failure {
+  constructor(message = 'Muitas requisicoes. Aguarde alguns segundos e tente novamente.') {
+    super(message, 'RATE_LIMITED');
+  }
+}
+
 export class ServerFailure extends Failure {
   constructor(
     message = 'Erro interno do servidor.',

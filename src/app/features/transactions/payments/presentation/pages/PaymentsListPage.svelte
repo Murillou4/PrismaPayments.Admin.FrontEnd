@@ -11,7 +11,7 @@
   import MerchantAutocomplete from '$appmod/features/transactions/shared/components/MerchantAutocomplete.svelte';
   import DateRangePicker from '$appmod/shared/widgets/filters/DateRangePicker.svelte';
   import { Button } from '$lib/components/ui/button';
-  import { formatCurrency, formatDate } from '$appmod/shared/utils/formatters';
+  import { formatCurrency, formatDate, formatShortId } from '$appmod/shared/utils/formatters';
   import type { Payment } from '$appmod/features/transactions/payments/domain/entities/Payment';
 
   const ctrl = createPaymentListController();
@@ -81,7 +81,7 @@
   });
 
   function handleRowClick(row: Row<Payment>) {
-    goto(`/transactions/payments/${row.original.id}`);
+    if (row.original.id) goto(`/transactions/payments/${row.original.id}`);
   }
 </script>
 
@@ -204,7 +204,7 @@
       style="color: var(--color-brand-cyan, #01FAFB); text-decoration: none; font-variant-numeric: tabular-nums;"
       onclick={(e) => e.stopPropagation()}
     >
-      {row.original.id.slice(0, 8)}...
+      {formatShortId(row.original.id)}
     </a>
   {:else if columnId === 'merchantId'}
     <a
@@ -212,12 +212,12 @@
       style="color: var(--color-brand-cyan, #01FAFB); text-decoration: none;"
       onclick={(e) => e.stopPropagation()}
     >
-      {row.original.merchantId.slice(0, 8)}...
+      {formatShortId(row.original.merchantId)}
     </a>
   {:else if columnId === 'method'}
     {@const mc = METHOD_COLORS[row.original.method] ?? { color: '#9090A8', bg: 'rgba(144,144,168,0.10)', border: 'rgba(144,144,168,0.20)' }}
     <span style="color: {mc.color}; background: {mc.bg}; border: 1px solid {mc.border}; border-radius: 9999px; padding: 4px 10px; font-size: 0.75rem; white-space: nowrap;">
-      {row.original.method}
+      {row.original.method ?? '-'}
     </span>
   {:else if columnId === 'status'}
     <StatusBadge status={row.original.status} />

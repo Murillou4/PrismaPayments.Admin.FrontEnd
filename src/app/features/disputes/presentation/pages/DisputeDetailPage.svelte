@@ -10,7 +10,7 @@
   import StatusBadge from '$appmod/shared/widgets/StatusBadge.svelte';
   import { Button } from '$lib/components/ui/button';
   import { hasPermission, type AdminRole } from '$appmod/shared/guards/adminGuard';
-  import { formatCurrency, formatDate } from '$appmod/shared/utils/formatters';
+  import { formatCurrency, formatDate, formatShortId } from '$appmod/shared/utils/formatters';
   import type { ResolveDisputePayload } from '$appmod/features/disputes/domain/entities/Dispute';
 
   interface Props {
@@ -51,7 +51,7 @@
   <div style="margin-bottom: 24px;">
     <Breadcrumbs segments={[
       { label: 'Disputas', href: '/disputes' },
-      { label: `#${disputeId.substring(0, 8)}` },
+      { label: `#${formatShortId(disputeId)}` },
     ]} />
   </div>
 
@@ -192,7 +192,7 @@
             onmouseenter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
             onmouseleave={(e) => (e.currentTarget.style.textDecoration = 'none')}
           >
-            #{dispute.paymentId.substring(0, 8)}...
+            #{formatShortId(dispute.paymentId)}
           </a>
         </div>
       </div>

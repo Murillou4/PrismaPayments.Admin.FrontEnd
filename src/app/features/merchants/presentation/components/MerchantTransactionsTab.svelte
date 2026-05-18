@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { formatCurrency, formatDate } from '$appmod/shared/utils/formatters';
+  import { formatCurrency, formatDate, formatShortId } from '$appmod/shared/utils/formatters';
 
   // Shape básico de transação — a feature completa de transações é fase futura
   interface RecentTransaction {
@@ -40,19 +40,19 @@
 </script>
 
 <div class="txns-tab">
-  {#if transactions.length === 0}
+  {#if (transactions ?? []).length === 0}
     <div class="empty-state">
       <p class="empty-text">Nenhuma transação recente encontrada.</p>
     </div>
   {:else}
     <div class="txns-list">
-      {#each transactions as txn (txn.id)}
+      {#each transactions ?? [] as txn (txn.id)}
         <div class="txn-row">
           <div class="txn-type">{TYPE_LABELS[txn.type] ?? txn.type}</div>
           <div class="txn-amount">{formatCurrency(txn.amount)}</div>
           <div class="txn-status" style="color: {statusColor(txn.status)}">{txn.status}</div>
           <div class="txn-date">{formatDate(txn.createdAt)}</div>
-          <div class="txn-id">{txn.id.substring(0, 8)}...</div>
+          <div class="txn-id">{formatShortId(txn.id)}</div>
         </div>
       {/each}
     </div>
