@@ -1,6 +1,7 @@
 export interface DiagnosticLogListItem {
   id: string;
   traceId?: string | null;
+  flowId?: string | null;
   level?: string | null;
   method?: string | null;
   path?: string | null;
@@ -18,6 +19,9 @@ export interface DiagnosticLogDetail extends DiagnosticLogListItem {
   requestHeaders?: Record<string, string> | null;
   requestBody?: string | null;
   responseBody?: string | null;
+  tenantId?: string | null;
+  authResourceType?: string | null;
+  authResourceId?: string | null;
   userId?: string | null;
   userAgent?: string | null;
   error?: {
@@ -51,6 +55,7 @@ export interface DiagnosticsFilters {
   method?: string;
   path?: string;
   traceId?: string;
+  flowId?: string;
   merchantId?: string;
   hasError?: boolean | null;
   page?: number;
@@ -63,4 +68,50 @@ export interface PurgeResult {
   deletedCount?: number;
   cutoffUtc?: string;
   retentionDays?: number;
+}
+
+export interface FlowGraph {
+  flowId: string;
+  startedAt?: string | null;
+  lastSeenAt?: string | null;
+  nodes: FlowGraphNode[];
+  edges: FlowGraphEdge[];
+  resources: FlowGraphResource[];
+}
+
+export interface FlowGraphNode {
+  id: string;
+  type: string;
+  label: string;
+  resourceType?: string | null;
+  resourceId?: string | null;
+  status?: string | null;
+  severity?: string | null;
+  timestamp: string;
+  metadata: Record<string, string | null | undefined>;
+}
+
+export interface FlowGraphEdge {
+  id: string;
+  source: string;
+  target: string;
+  type: string;
+  label: string;
+}
+
+export interface FlowGraphResource {
+  resourceType: string;
+  resourceId: string;
+  firstSeenAt: string;
+  lastSeenAt: string;
+  states: FlowGraphResourceState[];
+}
+
+export interface FlowGraphResourceState {
+  nodeId: string;
+  type: string;
+  status?: string | null;
+  severity?: string | null;
+  timestamp: string;
+  label: string;
 }

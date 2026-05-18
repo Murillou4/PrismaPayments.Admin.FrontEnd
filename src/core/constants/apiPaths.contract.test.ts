@@ -39,6 +39,7 @@ describe('Admin API paths contract', () => {
       API_PATHS.DIAGNOSTICS_LOGS,
       API_PATHS.DIAGNOSTICS_LOG('log_1'),
       API_PATHS.DIAGNOSTICS_TRACE('trace_1'),
+      API_PATHS.DIAGNOSTICS_FLOW('flow_1'),
       API_PATHS.DIAGNOSTICS_STATS,
       API_PATHS.DASHBOARD_ADMIN
     ];
@@ -53,7 +54,8 @@ describe('Admin API paths contract', () => {
         .replace('/dispute_1', '/{id}')
         .replace('/fee_1', '/{id}')
         .replace('/log_1', '/{id}')
-        .replace('/trace_1', '/{traceId}');
+        .replace('/trace_1', '/{traceId}')
+        .replace('/flow_1', '/{flowId}');
 
       expect(paths[openApiPath], `${openApiPath} missing from backend OpenAPI`).toBeTruthy();
     }

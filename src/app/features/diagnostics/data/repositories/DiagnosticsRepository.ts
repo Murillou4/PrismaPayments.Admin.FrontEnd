@@ -7,6 +7,7 @@ import type {
   DiagnosticsFilters,
   DiagnosticsList,
   DiagnosticsStats,
+  FlowGraph,
   PurgeResult
 } from '../../domain/entities/Diagnostics';
 
@@ -21,6 +22,7 @@ function paramsFromFilters(filters: DiagnosticsFilters = {}, paged = true) {
     method: filters.method || undefined,
     path: filters.path || undefined,
     traceId: filters.traceId || undefined,
+    flowId: filters.flowId || undefined,
     merchantId: filters.merchantId || undefined,
     hasError: filters.hasError ?? undefined,
     skip: paged ? (page - 1) * limit : undefined,
@@ -47,6 +49,10 @@ export class DiagnosticsRepository {
 
   async getTrace(traceId: string): Promise<Either<Failure, DiagnosticLogDetail[]>> {
     return apiResponseToEither(await apiClient.get<DiagnosticLogDetail[]>(API_PATHS.DIAGNOSTICS_TRACE(traceId)));
+  }
+
+  async getFlow(flowId: string): Promise<Either<Failure, FlowGraph>> {
+    return apiResponseToEither(await apiClient.get<FlowGraph>(API_PATHS.DIAGNOSTICS_FLOW(flowId)));
   }
 
   async purge(olderThanDays: number): Promise<Either<Failure, PurgeResult>> {

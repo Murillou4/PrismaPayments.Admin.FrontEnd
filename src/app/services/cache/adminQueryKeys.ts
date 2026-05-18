@@ -81,7 +81,8 @@ export const adminQueryKeys = {
     stats: (params?: Record<string, unknown>) =>
       ['admin', 'diagnostics', 'stats', stableParams(params)] as const,
     detail: (id: string) => ['admin', 'diagnostics', 'detail', id] as const,
-    trace: (traceId: string) => ['admin', 'diagnostics', 'trace', traceId] as const
+    trace: (traceId: string) => ['admin', 'diagnostics', 'trace', traceId] as const,
+    flow: (flowId: string) => ['admin', 'diagnostics', 'flow', flowId] as const
   },
   config: {
     all: ['admin', 'config'] as const

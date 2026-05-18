@@ -83,7 +83,7 @@
           { href: '/tenants', label: 'Tenants', Icon: Building2, minRole: 'SUPER_ADMIN', badge: 0 },
           { href: '/admin-users', label: 'Admins', Icon: UserCog, minRole: 'SUPER_ADMIN', badge: 0 },
           { href: '/audit', label: 'Auditoria', Icon: BookOpen, minRole: 'SUPPORT', badge: 0 },
-          { href: '/diagnostics', label: 'Diagnosticos', Icon: Activity, minRole: 'ADMIN', badge: 0 },
+          { href: '/diagnostics', label: 'Dev Logs', Icon: Activity, minRole: 'ADMIN', badge: 0 },
           { href: '/config', label: 'Configuracao', Icon: Settings2, minRole: 'ADMIN', badge: 0 },
           { href: '/settings/security', label: 'Seguranca', Icon: LockKeyhole, minRole: 'VIEWER', badge: 0 }
         ].filter((item) => hasPermission(userRole, item.minRole as AdminRole))

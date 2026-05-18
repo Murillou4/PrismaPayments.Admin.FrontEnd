@@ -57,6 +57,7 @@ export const API_PATHS = {
   DIAGNOSTICS_LOGS: '/api/v1/diagnostics/logs',
   DIAGNOSTICS_LOG: (id: string) => `/api/v1/diagnostics/logs/${id}`,
   DIAGNOSTICS_TRACE: (traceId: string) => `/api/v1/diagnostics/logs/trace/${traceId}`,
+  DIAGNOSTICS_FLOW: (flowId: string) => `/api/v1/diagnostics/flows/${flowId}`,
   DIAGNOSTICS_STATS: '/api/v1/diagnostics/logs/stats',
   DIAGNOSTICS_PURGE: '/api/v1/diagnostics/logs',
 

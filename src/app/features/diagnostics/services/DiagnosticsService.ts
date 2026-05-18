@@ -20,6 +20,10 @@ export class DiagnosticsService {
     return this.repo.getTrace(traceId);
   }
 
+  getFlow(flowId: string) {
+    return this.repo.getFlow(flowId);
+  }
+
   purge(olderThanDays: number) {
     return this.repo.purge(olderThanDays);
   }

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page } from '$app/state';
-  import { Bug, RefreshCw, Search, Trash2 } from 'lucide-svelte';
+  import { Activity, GitBranch, RefreshCw, Search, Trash2 } from 'lucide-svelte';
   import PageShell from '$appmod/shared/widgets/PageShell.svelte';
   import MetricPanel from '$appmod/shared/widgets/MetricPanel.svelte';
   import ActionToolbar from '$appmod/shared/widgets/ActionToolbar.svelte';
@@ -9,7 +9,15 @@
   import { formatDate } from '$appmod/shared/utils/formatters';
   import { hasPermission, type AdminRole } from '$appmod/shared/guards/adminGuard';
   import { appServices } from '$core/service_locator/dependencies';
-  import type { DiagnosticLogDetail, DiagnosticLogListItem, DiagnosticsStats } from '../../domain/entities/Diagnostics';
+  import FlowGraphPanel from '../components/FlowGraphPanel.svelte';
+  import FlowNodeInspector from '../components/FlowNodeInspector.svelte';
+  import FlowResourceTimeline from '../components/FlowResourceTimeline.svelte';
+  import type {
+    DiagnosticLogDetail,
+    DiagnosticLogListItem,
+    DiagnosticsStats,
+    FlowGraph
+  } from '../../domain/entities/Diagnostics';
 
   const service = appServices.diagnostics();
 
@@ -18,15 +26,20 @@
   let stats = $state<DiagnosticsStats | null>(null);
   let selected = $state<DiagnosticLogDetail | null>(null);
   let traceItems = $state<DiagnosticLogDetail[]>([]);
+  let flowGraph = $state<FlowGraph | null>(null);
+  let selectedFlowNodeId = $state<string | null>(null);
   let loading = $state(true);
   let detailLoading = $state(false);
+  let flowLoading = $state(false);
   let error = $state('');
   let message = $state('');
+  let flowInput = $state('');
   let filters = $state({
     method: '',
     statusCode: '',
     path: '',
     traceId: '',
+    flowId: '',
     merchantId: '',
     hasError: ''
   });
@@ -37,11 +50,12 @@
   const canPurge = $derived(hasPermission(page.data.adminRole as AdminRole, 'ADMIN'));
   const errorRate = $derived(stats ? `${stats.errorRate.toFixed(2)}%` : '0%');
   const avgMs = $derived(stats ? `${Math.round(stats.avgResponseTimeMs)}ms` : '0ms');
+  const activeFlowId = $derived(flowGraph?.flowId ?? selected?.flowId ?? selected?.traceId ?? '');
 
   function statusClass(status: number) {
-    if (status >= 500) return 'danger';
-    if (status >= 400) return 'warning';
-    return 'success';
+    if (status >= 500) return 'danger-text';
+    if (status >= 400) return 'warning-text';
+    return 'success-text';
   }
 
   function currentFilters() {
@@ -50,11 +64,16 @@
       statusCode: filters.statusCode ? Number(filters.statusCode) : null,
       path: filters.path || undefined,
       traceId: filters.traceId || undefined,
+      flowId: filters.flowId || undefined,
       merchantId: filters.merchantId || undefined,
       hasError: filters.hasError === '' ? null : filters.hasError === 'true',
       page: 1,
       limit: 40
     };
+  }
+
+  function resolveFlowId(item?: DiagnosticLogListItem | DiagnosticLogDetail | null) {
+    return item?.flowId || item?.traceId || '';
   }
 
   async function loadDiagnostics() {
@@ -91,6 +110,7 @@
 
     selected = result.value;
     traceItems = [];
+    flowInput = resolveFlowId(result.value);
   }
 
   async function loadTrace(traceId?: string | null) {
@@ -106,6 +126,29 @@
     }
 
     traceItems = result.value;
+  }
+
+  async function loadFlow(flowId?: string | null) {
+    const target = (flowId || flowInput || resolveFlowId(selected)).trim();
+    if (!target) {
+      error = 'Informe um flowId ou selecione um log com trace/flow.';
+      return;
+    }
+
+    flowLoading = true;
+    error = '';
+    selectedFlowNodeId = null;
+    const result = await service.getFlow(target);
+    flowLoading = false;
+
+    if (!result.ok) {
+      error = result.failure.message;
+      return;
+    }
+
+    flowGraph = result.value;
+    flowInput = result.value.flowId;
+    selectedFlowNodeId = result.value.nodes[0]?.id ?? null;
   }
 
   async function purgeLogs() {
@@ -135,9 +178,9 @@
 </script>
 
 <PageShell
-  eyebrow="Observability"
-  title="Diagnosticos"
-  subtitle="Logs HTTP, stats, detalhe tecnico, trace view e purge controlado com confirmacao forte."
+  eyebrow="Developer observability"
+  title="Logs do Developer"
+  subtitle="Logs HTTP, trace tecnico e grafo de fluxo para acompanhar tudo que nasceu de uma autenticacao, API key, checkout ou transacao."
   wide
 >
   {#snippet actions()}
@@ -146,18 +189,19 @@
 
   <div class="metrics">
     <MetricPanel label="Requests" value={stats?.totalRequests ?? total} tone="cyan" caption="Janela filtrada">
-      {#snippet icon()}<Bug size={16} />{/snippet}
+      {#snippet icon()}<Activity size={16} />{/snippet}
     </MetricPanel>
     <MetricPanel label="Erros" value={stats?.totalErrors ?? items.filter((item) => item.hasError).length} tone="danger" />
     <MetricPanel label="Error rate" value={errorRate} tone="warning" />
-    <MetricPanel label="Latencia media" value={avgMs} tone="magenta" />
+    <MetricPanel label="Flow atual" value={activeFlowId ? 'aberto' : 'vazio'} tone="magenta" />
   </div>
 
   <ActionToolbar>
     <label><span>Metodo</span><select bind:value={filters.method}><option value="">Todos</option><option>GET</option><option>POST</option><option>PUT</option><option>DELETE</option><option>PATCH</option></select></label>
     <label><span>Status</span><input bind:value={filters.statusCode} inputmode="numeric" placeholder="500" /></label>
     <label><span>Path</span><input bind:value={filters.path} placeholder="/api/v1/..." /></label>
-    <label><span>Trace</span><input bind:value={filters.traceId} /></label>
+    <label><span>Trace</span><input bind:value={filters.traceId} placeholder="traceId" /></label>
+    <label><span>Flow</span><input bind:value={filters.flowId} placeholder="flowId" /></label>
     <label><span>Merchant</span><input bind:value={filters.merchantId} /></label>
     <label><span>Erro</span><select bind:value={filters.hasError}><option value="">Todos</option><option value="true">Com erro</option><option value="false">Sem erro</option></select></label>
     <button class="primary" type="button" onclick={loadDiagnostics}><Search size={15} /> Filtrar</button>
@@ -166,8 +210,31 @@
   {#if error}<div class="notice notice--error">{error}</div>{/if}
   {#if message}<div class="notice notice--success">{message}</div>{/if}
 
-  <div class="diag-layout">
-    <section class="table-card">
+  <section class="flow-search">
+    <div>
+      <p>Empacotamento de fluxo</p>
+      <h2>Abra um flowId e veja a cadeia completa</h2>
+      <span>Use o flowId do header X-Flow-Id, de um log selecionado ou de uma sessao autenticada.</span>
+    </div>
+    <label>
+      <span>Flow ID</span>
+      <input bind:value={flowInput} placeholder="cole um flowId ou traceId" />
+    </label>
+    <button class="primary" type="button" onclick={() => loadFlow(flowInput)} disabled={flowLoading}>
+      <GitBranch size={15} /> {flowLoading ? 'Montando...' : 'Abrir grafo'}
+    </button>
+  </section>
+
+  <div class="workspace">
+    <section class="logs-panel">
+      <header class="panel-head">
+        <div>
+          <p>Eventos recentes</p>
+          <h2>{total} logs encontrados</h2>
+        </div>
+        <span>{avgMs} media</span>
+      </header>
+
       {#if loading}
         <div class="empty">Carregando logs...</div>
       {:else if items.length === 0}
@@ -175,7 +242,7 @@
       {:else}
         <div class="table">
           <div class="row head">
-            <span>Trace</span>
+            <span>Flow</span>
             <span>Metodo</span>
             <span>Path</span>
             <span>Status</span>
@@ -183,8 +250,13 @@
             <span>Data</span>
           </div>
           {#each items as item}
-            <button class="row" type="button" onclick={() => loadDetail(item)}>
-              <span class="mono">{item.traceId ?? item.id}</span>
+            <button
+              class="row"
+              class:row--active={selected?.id === item.id}
+              type="button"
+              onclick={() => loadDetail(item)}
+            >
+              <span class="mono">{item.flowId ?? item.traceId ?? item.id}</span>
               <span>{item.method ?? '-'}</span>
               <span class="path">{item.path ?? '-'}</span>
               <span class={statusClass(item.statusCode)}>{item.statusCode}</span>
@@ -202,7 +274,7 @@
         <div class="purge-row">
           <input bind:value={purgeDays} inputmode="numeric" aria-label="Dias de retencao" />
           <input bind:value={purgeConfirm} placeholder="Digite PURGE" aria-label="Confirmacao de purge" />
-          <button class="danger" type="button" onclick={purgeLogs} disabled={!canPurge || purgeConfirm !== 'PURGE' || purging}>
+          <button class="danger-action" type="button" onclick={purgeLogs} disabled={!canPurge || purgeConfirm !== 'PURGE' || purging}>
             <Trash2 size={14} /> {purging ? 'Purgando...' : 'Purgar'}
           </button>
         </div>
@@ -211,26 +283,31 @@
       {#if detailLoading}
         <div class="empty">Carregando detalhe...</div>
       {:else if selected}
-        <header>
+        <header class="detail-head">
           <div>
             <p>Log detail</p>
             <h2>{selected.method} {selected.path}</h2>
           </div>
-          {#if selected.traceId}<CopyButton value={selected.traceId} label="Copiar trace" />{/if}
+          {#if selected.traceId}<CopyButton value={selected.traceId} label="Trace" />{/if}
         </header>
 
         <div class="kv-grid">
           <div><span>Status</span><strong class={statusClass(selected.statusCode)}>{selected.statusCode}</strong></div>
           <div><span>Duracao</span><strong>{selected.durationMs}ms</strong></div>
+          <div><span>Flow</span><strong>{selected.flowId ?? '-'}</strong></div>
+          <div><span>Auth</span><strong>{selected.authResourceType ?? '-'} {selected.authResourceId ?? ''}</strong></div>
           <div><span>IP</span><strong>{selected.clientIp ?? '-'}</strong></div>
           <div><span>User</span><strong>{selected.userId ?? selected.merchantId ?? '-'}</strong></div>
         </div>
 
-        <button class="ghost" type="button" onclick={() => loadTrace(selected?.traceId)}>Ver trace completo</button>
+        <div class="detail-actions">
+          <button class="ghost" type="button" onclick={() => loadTrace(selected?.traceId)}>Ver trace HTTP</button>
+          <button class="primary" type="button" onclick={() => loadFlow(resolveFlowId(selected))}>Abrir fluxo</button>
+        </div>
 
         {#if traceItems.length > 0}
           <section class="trace-list">
-            <p>Trace view</p>
+            <p>Trace HTTP</p>
             {#each traceItems as item}
               <div>
                 <strong>{item.method} {item.path}</strong>
@@ -242,15 +319,24 @@
 
         <JsonPanel title="Request/response" value={selected} />
       {:else}
-        <div class="empty">Selecione um log para ver request, response e erro.</div>
+        <div class="empty">Selecione um log para ver request, response, auth resource e flow.</div>
       {/if}
+    </aside>
+  </div>
+
+  <div class="flow-layout">
+    <FlowGraphPanel graph={flowGraph} loading={flowLoading} bind:selectedNodeId={selectedFlowNodeId} />
+    <aside class="flow-side">
+      <FlowNodeInspector graph={flowGraph} selectedNodeId={selectedFlowNodeId} />
+      <FlowResourceTimeline resources={flowGraph?.resources ?? []} />
     </aside>
   </div>
 </PageShell>
 
 <style>
   .metrics,
-  .diag-layout,
+  .workspace,
+  .flow-layout,
   .kv-grid {
     display: grid;
     gap: 14px;
@@ -261,9 +347,59 @@
     margin-bottom: 16px;
   }
 
-  .diag-layout {
-    grid-template-columns: minmax(0, 1fr) 480px;
+  .flow-search {
+    display: grid;
+    grid-template-columns: minmax(240px, 1fr) minmax(280px, 460px) auto;
+    gap: 14px;
+    align-items: end;
+    margin-bottom: 16px;
+    padding: 16px;
+    border: 1px solid rgba(1, 250, 251, 0.12);
+    border-radius: 18px;
+    background:
+      linear-gradient(135deg, rgba(1, 250, 251, 0.07), transparent 46%),
+      var(--color-surface);
+  }
+
+  .flow-search h2,
+  .flow-search p,
+  .flow-search span,
+  .panel-head h2,
+  .panel-head p,
+  .details p,
+  .purge p,
+  .trace-list p,
+  .kv-grid span {
+    margin: 0;
+  }
+
+  .flow-search h2,
+  .panel-head h2,
+  .detail-head h2 {
+    font-size: 1.03rem;
+  }
+
+  .flow-search > div > span {
+    display: block;
+    margin-top: 6px;
+    color: var(--color-foreground-secondary);
+    font-size: 0.86rem;
+  }
+
+  .workspace {
+    grid-template-columns: minmax(0, 1fr) 470px;
     align-items: start;
+    margin-bottom: 16px;
+  }
+
+  .flow-layout {
+    grid-template-columns: minmax(0, 1fr) 360px;
+    align-items: start;
+  }
+
+  .flow-side {
+    display: grid;
+    gap: 14px;
   }
 
   button,
@@ -274,7 +410,7 @@
 
   .primary,
   .ghost,
-  .danger {
+  .danger-action {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -284,6 +420,13 @@
     border-radius: 11px;
     font-weight: 750;
     cursor: pointer;
+    transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+  }
+
+  .primary:active,
+  .ghost:active,
+  .danger-action:active {
+    transform: translateY(1px) scale(0.99);
   }
 
   .primary {
@@ -298,7 +441,7 @@
     background: rgba(255, 255, 255, 0.035);
   }
 
-  .danger {
+  .danger-action {
     border: 1px solid rgba(255, 59, 92, 0.2);
     color: var(--color-danger);
     background: rgba(255, 59, 92, 0.07);
@@ -315,6 +458,8 @@
   }
 
   label span,
+  .flow-search p,
+  .panel-head p,
   .details p,
   .purge p,
   .trace-list p,
@@ -338,7 +483,12 @@
     outline: none;
   }
 
-  .table-card,
+  input:focus,
+  select:focus {
+    border-color: rgba(1, 250, 251, 0.32);
+  }
+
+  .logs-panel,
   .details {
     border: 1px solid rgba(255, 255, 255, 0.075);
     border-radius: 16px;
@@ -347,18 +497,33 @@
       var(--color-surface);
   }
 
-  .table-card {
+  .logs-panel {
     overflow-x: auto;
   }
 
+  .panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.065);
+  }
+
+  .panel-head > span {
+    color: var(--color-brand-cyan);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+  }
+
   .table {
-    min-width: 980px;
+    min-width: 1040px;
   }
 
   .row {
     width: 100%;
     display: grid;
-    grid-template-columns: 1fr 0.55fr 1.45fr 0.55fr 0.6fr 0.9fr;
+    grid-template-columns: 1.25fr 0.5fr 1.45fr 0.5fr 0.6fr 0.85fr;
     gap: 12px;
     align-items: center;
     padding: 13px 15px;
@@ -373,8 +538,9 @@
     cursor: pointer;
   }
 
-  button.row:hover {
-    background: rgba(1, 250, 251, 0.04);
+  button.row:hover,
+  .row--active {
+    background: rgba(1, 250, 251, 0.045);
   }
 
   .head {
@@ -396,15 +562,15 @@
     font-size: 0.78rem;
   }
 
-  .success {
+  .success-text {
     color: var(--color-success);
   }
 
-  .warning {
+  .warning-text {
     color: var(--color-warning);
   }
 
-  .danger {
+  .danger-text {
     color: var(--color-danger);
   }
 
@@ -416,24 +582,22 @@
     padding: 16px;
   }
 
-  .details header {
+  .detail-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
   }
 
-  .details p,
-  .purge p,
-  .trace-list p,
-  h2 {
-    margin: 0;
+  .detail-head h2 {
+    margin: 4px 0 0;
+    word-break: break-word;
   }
 
-  h2 {
-    margin-top: 4px;
-    font-size: 1.02rem;
-    word-break: break-word;
+  .detail-actions {
+    display: flex;
+    gap: 9px;
+    flex-wrap: wrap;
   }
 
   .kv-grid {
@@ -505,14 +669,26 @@
     background: rgba(0, 230, 118, 0.08);
   }
 
-  @media (max-width: 1120px) {
-    .metrics,
-    .diag-layout {
+  @media (max-width: 1240px) {
+    .workspace,
+    .flow-layout {
       grid-template-columns: 1fr;
     }
 
     .details {
       position: static;
+    }
+  }
+
+  @media (max-width: 860px) {
+    .metrics,
+    .flow-search {
+      grid-template-columns: 1fr;
+    }
+
+    .purge-row,
+    .kv-grid {
+      grid-template-columns: 1fr;
     }
   }
 </style>
