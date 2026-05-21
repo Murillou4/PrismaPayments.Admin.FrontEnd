@@ -1,6 +1,7 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
   import { goto } from '$app/navigation';
+  import { parallax } from '$lib/actions/parallax';
   import { Activity, ArrowRight, CheckCircle2, LockKeyhole, ShieldCheck } from 'lucide-svelte';
 
   interface Props {
@@ -28,6 +29,8 @@
     { title: 'Tenant isolado', detail: 'Contexto admin validado antes do dashboard.' },
     { title: 'Monitoramento', detail: 'Eventos criticos seguem para auditoria.' }
   ];
+
+  const previewTabs = ['PIX live', 'Risk scan', 'Webhook sync', 'KYC queue'];
 </script>
 
 <main class="login-shell">
@@ -103,7 +106,13 @@
     </form>
   </section>
 
-  <aside class="flowbit-preview" aria-label="Resumo visual da operacao">
+  <aside class="flowbit-preview" aria-label="Resumo visual da operacao" use:parallax={{ intensity: 1.05 }}>
+    <div class="preview-tabs" aria-hidden="true">
+      {#each previewTabs as tab, index}
+        <span style={`--index: ${index}`}>{tab}</span>
+      {/each}
+    </div>
+
     <div class="preview-grid">
       <div class="hero-card">
         <div class="hero-card__top">
@@ -123,7 +132,7 @@
 
       <div class="metric-strip">
         {#each metrics as metric, index}
-          <div class={`metric metric--${metric.tone}`} style={`--index: ${index}`}>
+          <div class={`metric metric--${metric.tone}`} style={`--index: ${index}; --metric-z: ${(index + 1) * 20}px`}>
             <span>{metric.label}</span>
             <strong>{metric.value}</strong>
           </div>
@@ -413,6 +422,20 @@
   }
 
   .flowbit-preview {
+    --preview-grid-x: 0px;
+    --preview-grid-y: 0px;
+    --preview-grid-rx: 0deg;
+    --preview-grid-ry: 0deg;
+    --preview-tabs-x: 0px;
+    --preview-tabs-y: 0px;
+    --preview-tabs-rx: 0deg;
+    --preview-tabs-ry: 0deg;
+    --hero-x: 0px;
+    --hero-y: 0px;
+    --metric-x: 0px;
+    --metric-y: 0px;
+    --workflow-x: 0px;
+    --workflow-y: 0px;
     position: relative;
     z-index: 1;
     display: flex;
@@ -421,6 +444,8 @@
     min-width: 0;
     overflow: hidden;
     padding: clamp(28px, 6vw, 84px);
+    perspective: 1400px;
+    transform-style: preserve-3d;
   }
 
   .flowbit-preview::before {
@@ -450,6 +475,76 @@
     animation: previewGlow 12s ease-in-out infinite alternate;
   }
 
+  .preview-tabs {
+    position: absolute;
+    z-index: 2;
+    inset: 12% 7% auto auto;
+    width: min(420px, 46vw);
+    height: 250px;
+    pointer-events: none;
+    transform:
+      translate3d(var(--preview-tabs-x), var(--preview-tabs-y), 54px)
+      rotateX(var(--preview-tabs-rx))
+      rotateY(var(--preview-tabs-ry));
+    transform-style: preserve-3d;
+    transition: transform 420ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .preview-tabs span {
+    position: absolute;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 34px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.035)),
+      rgba(9, 9, 14, 0.58);
+    color: rgba(246, 246, 255, 0.86);
+    font-size: 0.76rem;
+    font-weight: 780;
+    padding: 0 13px 0 11px;
+    box-shadow:
+      0 18px 46px rgba(0, 0, 0, 0.28),
+      inset 0 1px 0 rgba(255, 255, 255, 0.16);
+    backdrop-filter: blur(18px) saturate(145%);
+    transform: translate3d(0, 0, calc(var(--index) * 16px));
+    animation: tabDrift 5.8s ease-in-out infinite;
+    animation-delay: calc(var(--index) * -720ms);
+  }
+
+  .preview-tabs span::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: var(--color-brand-cyan);
+    box-shadow:
+      0 0 0 5px rgba(1, 250, 251, 0.08),
+      0 0 18px rgba(1, 250, 251, 0.42);
+  }
+
+  .preview-tabs span:nth-child(1) {
+    top: 8px;
+    right: 18px;
+  }
+
+  .preview-tabs span:nth-child(2) {
+    top: 68px;
+    left: 34px;
+  }
+
+  .preview-tabs span:nth-child(3) {
+    right: 0;
+    bottom: 66px;
+  }
+
+  .preview-tabs span:nth-child(4) {
+    left: 4px;
+    bottom: 8px;
+  }
+
   .preview-grid {
     position: relative;
     z-index: 1;
@@ -457,6 +552,12 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(196px, 0.52fr);
     gap: 12px;
+    transform:
+      translate3d(var(--preview-grid-x), var(--preview-grid-y), 0)
+      rotateX(var(--preview-grid-rx))
+      rotateY(var(--preview-grid-ry));
+    transform-style: preserve-3d;
+    transition: transform 420ms cubic-bezier(0.16, 1, 0.3, 1);
     animation: previewIn 620ms cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
@@ -484,6 +585,9 @@
     background:
       linear-gradient(180deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.02)),
       rgba(15, 15, 24, 0.66);
+    transform:
+      translate3d(var(--hero-x), var(--hero-y), 38px);
+    transition: transform 420ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .hero-card::before {
@@ -575,6 +679,8 @@
     gap: 10px;
     border-radius: 20px;
     padding: 20px;
+    transform: translate3d(var(--metric-x), var(--metric-y), var(--metric-z));
+    transition: transform 420ms cubic-bezier(0.16, 1, 0.3, 1);
     animation: metricFloat 4.8s ease-in-out infinite;
     animation-delay: calc(var(--index) * -900ms);
   }
@@ -660,6 +766,9 @@
       radial-gradient(circle at 18% 0%, rgba(1, 250, 251, 0.09), transparent 34%),
       radial-gradient(circle at 88% 0%, rgba(255, 0, 255, 0.1), transparent 38%),
       rgba(15, 15, 24, 0.66);
+    transform:
+      translate3d(var(--workflow-x), var(--workflow-y), 22px);
+    transition: transform 420ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .workflow-card::before {
@@ -761,11 +870,13 @@
   @keyframes previewIn {
     from {
       opacity: 0;
-      transform: translate3d(0, 18px, 0) scale(0.98);
+      translate: 0 18px;
+      scale: 0.98;
     }
     to {
       opacity: 1;
-      transform: translate3d(0, 0, 0) scale(1);
+      translate: 0 0;
+      scale: 1;
     }
   }
 
@@ -814,10 +925,22 @@
   @keyframes metricFloat {
     0%,
     100% {
-      transform: translate3d(0, 0, 0);
+      translate: 0 0;
     }
     50% {
-      transform: translate3d(0, -4px, 0);
+      translate: 0 -4px;
+    }
+  }
+
+  @keyframes tabDrift {
+    0%,
+    100% {
+      translate: 0 0;
+      opacity: 0.82;
+    }
+    50% {
+      translate: 0 -8px;
+      opacity: 1;
     }
   }
 
@@ -928,6 +1051,10 @@
 
     .flowbit-preview {
       padding-top: 10px;
+    }
+
+    .preview-tabs {
+      display: none;
     }
 
     .preview-grid {
@@ -1049,6 +1176,8 @@
     .chart-bars i {
       opacity: 1;
       transform: none;
+      translate: 0 0;
+      scale: 1;
     }
   }
 </style>

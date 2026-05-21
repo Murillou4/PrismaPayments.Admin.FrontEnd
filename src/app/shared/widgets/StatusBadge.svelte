@@ -58,6 +58,7 @@
     class={variant.isMed ? 'status-badge status-badge--med' : 'status-badge'}
     style="color: {variant.color}; background: {variant.background}; border-color: {variant.border};"
   >
+    <span class="status-badge__dot" style="background: {variant.color};"></span>
     {status}
   </Badge>
 </span>
@@ -69,14 +70,23 @@
 
   :global(.status-badge) {
     border-radius: 9999px;
-    padding: 4px 10px;
-    font-size: 0.75rem;
-    font-weight: 400;
+    padding: 3px 8px;
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    font-weight: 650;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    line-height: 1.5;
+    letter-spacing: 0.06em;
+    line-height: 1.45;
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  :global(.status-badge__dot) {
+    width: 5px;
+    height: 5px;
+    border-radius: 999px;
+    box-shadow: 0 0 0 2px color-mix(in srgb, currentColor 15%, transparent);
   }
 
   /* MED: pulsing left border — time-sensitive indicator */
@@ -85,7 +95,7 @@
     animation: med-pulse 1.5s ease-in-out infinite;
   }
 
-  @keyframes -global-med-pulse {
+  @keyframes med-pulse {
     0%, 100% { border-left-color: rgba(255,59,92,0.30); }
     50%       { border-left-color: rgba(255,59,92,0.80); }
   }

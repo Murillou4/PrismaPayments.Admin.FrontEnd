@@ -18,8 +18,8 @@
       legend: {
         position: 'bottom' as const,
         labels: {
-          color: '#9090A8',
-          font: { family: 'Outfit', size: 11 },
+          color: '#9A9AAF',
+          font: { family: 'JetBrains Mono Variable', size: 10 },
           padding: 12,
           usePointStyle: true,
           pointStyle: 'circle' as const
@@ -33,8 +33,8 @@
         bodyColor: '#9090A8',
         padding: 12,
         cornerRadius: 10,
-        titleFont: { family: 'Outfit', size: 13, weight: 600 },
-        bodyFont: { family: 'Outfit', size: 12 },
+        titleFont: { family: 'Onest Variable', size: 13, weight: 700 },
+        bodyFont: { family: 'Onest Variable', size: 12 },
         callbacks: {
           label(ctx: { parsed: number; dataset: { data?: number[] } }) {
             const v = ctx.parsed;
@@ -68,8 +68,10 @@
 <style>
   .panel {
     position: relative;
-    background: #0f0f18;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background:
+      linear-gradient(145deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.014)),
+      var(--color-surface);
+    border: 1px solid var(--color-border);
     border-radius: 20px;
     padding: 20px;
     height: 100%;
@@ -77,7 +79,11 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    box-shadow:
+      0 18px 44px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.055);
   }
+
   .panel-accent {
     position: absolute;
     top: 0;
@@ -95,21 +101,22 @@
     margin-bottom: 12px;
     flex-shrink: 0;
   }
+
   .sec-label {
-    font-family: 'Outfit', sans-serif;
+    font-family: var(--font-mono);
     font-size: 10px;
     font-weight: 700;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.13em;
     text-transform: uppercase;
-    color: #9090a8;
+    color: var(--color-foreground-secondary);
     margin: 0 0 4px;
     padding-bottom: 8px;
-    border-bottom: 1px solid #1e1e2e;
+    border-bottom: 1px solid var(--color-border-subtle);
   }
+
   .panel-hint {
-    font-family: 'Outfit', sans-serif;
-    font-size: 11px;
-    color: #3a3a50;
+    font-size: 0.74rem;
+    color: var(--color-foreground-secondary);
     margin: 0;
   }
   .donut-wrap {
@@ -128,7 +135,7 @@
     width: 160px;
     height: 160px;
     border-radius: 50%;
-    border: 14px solid #141420;
+    border: 14px solid var(--color-surface-inset);
   }
   .sk {
     animation: pulse 1.6s ease-in-out infinite;
@@ -147,9 +154,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-family: 'Outfit', sans-serif;
-    font-size: 12px;
-    color: #3a3a50;
+    font-size: 0.78rem;
+    color: var(--color-foreground-secondary);
     letter-spacing: 0.06em;
     min-height: 200px;
   }

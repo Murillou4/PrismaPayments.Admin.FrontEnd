@@ -4,9 +4,9 @@
   import { RangeCalendar } from '$lib/components/ui/range-calendar/index.js';
   import {
     CalendarDate,
-    today,
     getLocalTimeZone,
     startOfMonth,
+    today,
     type DateValue
   } from '@internationalized/date';
   import type { DateRange } from 'bits-ui';
@@ -45,13 +45,13 @@
 
   function formatDisplayDate(iso: string | null): string {
     if (!iso) return '';
-    const d = new Date(iso + 'T00:00:00');
+    const d = new Date(`${iso}T00:00:00`);
     return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
   }
 
   const displayLabel = $derived(() => {
     if (startDate && endDate) {
-      return `${formatDisplayDate(startDate)} — ${formatDisplayDate(endDate)}`;
+      return `${formatDisplayDate(startDate)} - ${formatDisplayDate(endDate)}`;
     }
     if (startDate) return `A partir de ${formatDisplayDate(startDate)}`;
     return 'Periodo';
@@ -59,9 +59,7 @@
 
   function applyPreset(start: CalendarDate, end: CalendarDate) {
     calendarValue = { start, end };
-    const startIso = toIsoString(start);
-    const endIso = toIsoString(end);
-    onChange(startIso, endIso);
+    onChange(toIsoString(start), toIsoString(end));
     open = false;
   }
 
@@ -72,20 +70,17 @@
 
   function preset7Days() {
     const t = today(getLocalTimeZone());
-    const s = t.subtract({ days: 6 });
-    applyPreset(s, t);
+    applyPreset(t.subtract({ days: 6 }), t);
   }
 
   function preset30Days() {
     const t = today(getLocalTimeZone());
-    const s = t.subtract({ days: 29 });
-    applyPreset(s, t);
+    applyPreset(t.subtract({ days: 29 }), t);
   }
 
   function presetThisMonth() {
     const t = today(getLocalTimeZone());
-    const s = startOfMonth(t);
-    applyPreset(s, t);
+    applyPreset(startOfMonth(t), t);
   }
 
   function clearDates() {
@@ -102,113 +97,153 @@
   }
 </script>
 
-<div style="display: flex; flex-direction: column; gap: 4px; min-width: 200px;">
-  <label for={triggerId} style="font-family: 'Outfit', sans-serif; font-size: 0.75rem; font-weight: 500; color: var(--color-foreground-secondary, #9090A8); text-transform: uppercase; letter-spacing: 0.08em;">
-    Periodo
-  </label>
+<div class="date-range-picker">
+  <label for={triggerId}>Periodo</label>
   <Popover.Root bind:open>
     <Popover.Trigger
       id={triggerId}
-      style="
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-family: 'Outfit', sans-serif;
-          font-size: 0.875rem;
-          background: var(--color-surface-overlay, #1A1A28);
-          border: 1px solid var(--color-border, rgba(255,255,255,0.08));
-          border-radius: 12px;
-          padding: 10px 12px;
-          color: {startDate ? 'var(--color-foreground, #F6F6FF)' : 'var(--color-foreground-secondary, #9090A8)'};
-          min-height: 44px;
-          cursor: pointer;
-          transition: border-color 0.15s;
-          white-space: nowrap;
-        "
+      class={`date-range-picker__trigger ${startDate ? 'date-range-picker__trigger--active' : ''}`}
     >
       <CalendarDays size={14} strokeWidth={1.5} />
       {displayLabel()}
     </Popover.Trigger>
-    <Popover.Content
-      style="
-        background: var(--color-surface-overlay, #1A1A28);
-        border: 1px solid var(--color-border, rgba(255,255,255,0.12));
-        border-radius: 12px;
-        box-shadow: 0 16px 48px rgba(0,0,0,0.60);
-        padding: 0;
-        z-index: 50;
-      "
-    >
-      <div style="display: flex; gap: 0;">
-        <!-- Presets -->
-        <div style="display: flex; flex-direction: column; gap: 2px; padding: 12px; border-right: 1px solid rgba(255,255,255,0.08); min-width: 120px;">
-          <p style="font-family: 'Outfit', sans-serif; font-size: 0.7rem; font-weight: 600; color: var(--color-foreground-secondary, #9090A8); text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 8px;">
-            Atalhos
-          </p>
+    <Popover.Content class="date-range-picker__content">
+      <div class="date-range-picker__panel">
+        <div class="date-range-picker__presets">
+          <p>Atalhos</p>
           {#each [
             { label: 'Hoje', action: presetToday },
             { label: '7 dias', action: preset7Days },
             { label: '30 dias', action: preset30Days },
-            { label: 'Este mes', action: presetThisMonth },
+            { label: 'Este mes', action: presetThisMonth }
           ] as preset (preset.label)}
-            <button
-              type="button"
-              onclick={preset.action}
-              style="
-                display: flex;
-                align-items: center;
-                padding: 8px 12px;
-                border: none;
-                background: transparent;
-                color: var(--color-foreground, #F6F6FF);
-                font-family: 'Outfit', sans-serif;
-                font-size: 0.8125rem;
-                cursor: pointer;
-                border-radius: 8px;
-                text-align: left;
-                min-height: 36px;
-                transition: background 0.12s;
-              "
-            >
+            <button type="button" onclick={preset.action}>
               {preset.label}
             </button>
           {/each}
           {#if startDate || endDate}
-            <div style="margin-top: auto; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.06);">
-              <button
-                type="button"
-                onclick={clearDates}
-                style="
-                  display: flex;
-                  align-items: center;
-                  gap: 4px;
-                  padding: 8px 12px;
-                  border: none;
-                  background: transparent;
-                  color: var(--color-foreground-secondary, #9090A8);
-                  font-family: 'Outfit', sans-serif;
-                  font-size: 0.8125rem;
-                  cursor: pointer;
-                  border-radius: 8px;
-                  min-height: 36px;
-                  width: 100%;
-                "
-              >
+            <div class="date-range-picker__clear">
+              <button type="button" onclick={clearDates}>
                 <X size={12} strokeWidth={2} />
                 Limpar
               </button>
             </div>
           {/if}
         </div>
-        <!-- Calendar -->
-        <div style="padding: 8px;">
-          <RangeCalendar
-            value={calendarValue}
-            onValueChange={handleCalendarChange}
-            locale="pt-BR"
-          />
+        <div class="date-range-picker__calendar">
+          <RangeCalendar value={calendarValue} onValueChange={handleCalendarChange} locale="pt-BR" />
         </div>
       </div>
     </Popover.Content>
   </Popover.Root>
 </div>
+
+<style>
+  .date-range-picker {
+    display: flex;
+    min-width: 200px;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .date-range-picker label {
+    color: var(--color-foreground-secondary);
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  :global(.date-range-picker__trigger) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 38px;
+    padding: 0 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.035);
+    color: var(--color-foreground-secondary);
+    cursor: pointer;
+    font-size: 0.84rem;
+    white-space: nowrap;
+    transition: border-color 0.18s, background 0.18s, color 0.18s;
+  }
+
+  :global(.date-range-picker__trigger:hover),
+  :global(.date-range-picker__trigger--active) {
+    border-color: var(--color-border-hover);
+    background: rgba(255, 255, 255, 0.055);
+    color: var(--color-foreground);
+  }
+
+  :global(.date-range-picker__content) {
+    z-index: 50;
+    overflow: hidden;
+    padding: 0;
+    border-color: var(--color-border);
+    border-radius: var(--radius-xl);
+    background: var(--color-surface-overlay);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .date-range-picker__panel {
+    display: flex;
+  }
+
+  .date-range-picker__presets {
+    display: flex;
+    min-width: 120px;
+    flex-direction: column;
+    gap: 2px;
+    padding: 12px;
+    border-right: 1px solid var(--color-border-subtle);
+  }
+
+  .date-range-picker__presets p {
+    margin: 0 0 8px;
+    color: var(--color-foreground-secondary);
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .date-range-picker__presets button {
+    display: flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 0 10px;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--color-foreground);
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.8rem;
+    text-align: left;
+    transition: background 0.12s, color 0.12s;
+  }
+
+  .date-range-picker__presets button:hover {
+    background: rgba(255, 255, 255, 0.055);
+  }
+
+  .date-range-picker__clear {
+    margin-top: auto;
+    padding-top: 8px;
+    border-top: 1px solid var(--color-border-subtle);
+  }
+
+  .date-range-picker__clear button {
+    gap: 5px;
+    width: 100%;
+    color: var(--color-foreground-secondary);
+  }
+
+  .date-range-picker__calendar {
+    padding: 8px;
+  }
+</style>

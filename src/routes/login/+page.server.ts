@@ -43,6 +43,13 @@ export const actions: Actions = {
     if (!response.ok || !authData?.accessToken || !authData.refreshToken) {
       clearAuthCookies(cookies);
       clearPendingTwoFactorLogin(cookies);
+
+      if (response.status === 503) {
+        return fail(503, {
+          error: 'Falha ao conectar com o backend. Confirme que o Prisma Dev Launcher esta rodando.'
+        });
+      }
+
       return fail(response.status === 401 ? 401 : response.status, {
         error: response.body?.message ?? 'E-mail ou senha invalidos.'
       });

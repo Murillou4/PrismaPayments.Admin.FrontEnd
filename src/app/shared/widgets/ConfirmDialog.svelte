@@ -44,135 +44,152 @@
 </script>
 
 <Dialog.Root bind:open onOpenChange={handleOpenChange}>
-  <Dialog.Content
-    showCloseButton={false}
-    style="
-      background: var(--color-surface, #0F0F18);
-      border: 1px solid var(--color-border, rgba(255,255,255,0.08));
-      border-radius: var(--radius-2xl, 24px);
-      box-shadow: var(--shadow-lg, 0 16px 48px rgba(0,0,0,0.60));
-      padding: 32px;
-      max-width: 448px;
-      width: 100%;
-      color: var(--color-foreground, #F6F6FF);
-    "
-  >
+  <Dialog.Content showCloseButton={false} class="confirm-dialog">
     <Dialog.Header>
-      <Dialog.Title
-        style="
-          font-family: var(--font-display);
-          font-size: 1.75rem;
-          font-weight: 700;
-          color: var(--color-foreground, #F6F6FF);
-          margin: 0 0 8px;
-          text-wrap: balance;
-        "
-      >
-        {title}
-      </Dialog.Title>
+      <Dialog.Title class="confirm-dialog__title">{title}</Dialog.Title>
     </Dialog.Header>
 
     {#if description}
-      <p
-        style="
-          font-size: 0.875rem;
-          color: var(--color-foreground-secondary, #9090A8);
-          margin: 0 0 24px;
-          line-height: 1.55;
-          text-wrap: pretty;
-        "
-      >
-        {description}
-      </p>
+      <p class="confirm-dialog__description">{description}</p>
     {/if}
 
     {#if requiresReason}
-      <div style="margin-bottom: 24px;">
-        <label
-          for="confirm-reason"
-          style="
-            display: block;
-            font-size: 0.75rem;
-            font-weight: 400;
-            color: var(--color-foreground-secondary, #9090A8);
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            margin-bottom: 8px;
-          "
-        >
-          {reasonLabel}
-        </label>
+      <div class="confirm-dialog__field">
+        <label for="confirm-reason">{reasonLabel}</label>
         <textarea
           id="confirm-reason"
           bind:value={reason}
           rows={3}
           placeholder="Descreva o motivo..."
-          style="
-            width: 100%;
-            box-sizing: border-box;
-            background: var(--color-surface-overlay, #1A1A28);
-            border: 1px solid var(--color-border, rgba(255,255,255,0.08));
-            border-radius: var(--radius-md, 12px);
-            padding: 12px 16px;
-            color: var(--color-foreground, #F6F6FF);
-            font-size: 1rem;
-            font-family: var(--font-body, Outfit, sans-serif);
-            resize: vertical;
-            outline: none;
-            transition: border-color 0.15s, box-shadow 0.15s;
-          "
-          onfocus={(e) => {
-            e.currentTarget.style.borderColor = 'var(--color-border-hover, rgba(255,255,255,0.14))';
-            e.currentTarget.style.boxShadow = '0 0 0 2px #FF00FF';
-          }}
-          onblur={(e) => {
-            e.currentTarget.style.borderColor = 'var(--color-border, rgba(255,255,255,0.08))';
-            e.currentTarget.style.boxShadow = 'none';
-          }}
         ></textarea>
       </div>
     {/if}
 
-    <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 8px;">
-      <button
-        type="button"
-        onclick={oncancel}
-        style="
-          background: transparent;
-          border: 1px solid var(--color-border, rgba(255,255,255,0.08));
-          border-radius: var(--radius-md, 12px);
-          padding: 12px 24px;
-          color: var(--color-foreground-secondary, #9090A8);
-          font-size: 1rem;
-          font-weight: 700;
-          cursor: pointer;
-          transition: background 0.15s;
-          min-height: 44px;
-        "
-      >
+    <div class="confirm-dialog__actions">
+      <button type="button" class="confirm-dialog__button" onclick={oncancel}>
         {cancelLabel}
       </button>
 
       <button
         type="button"
+        class="confirm-dialog__button confirm-dialog__button--primary"
+        class:confirm-dialog__button--danger={destructive}
         onclick={handleConfirm}
         disabled={!canConfirm}
-        style="
-          background: {destructive ? 'rgba(255,59,92,0.10)' : 'linear-gradient(135deg, #0A0A0F 0%, #18111A 100%)'};
-          border: 1px solid {destructive ? '#FF3B5C' : '#FF00FF'};
-          border-radius: var(--radius-md, 12px);
-          padding: 12px 24px;
-          color: {destructive ? '#FF3B5C' : 'var(--color-foreground, #F6F6FF)'};
-          font-size: 1rem;
-          font-weight: 700;
-          cursor: {canConfirm ? 'pointer' : 'not-allowed'};
-          opacity: {canConfirm ? '1' : '0.38'};
-          transition: opacity 0.15s;
-          min-height: 44px;
-        "
       >
         {confirmLabel}
       </button>
     </div>
   </Dialog.Content>
 </Dialog.Root>
+
+<style>
+  :global(.confirm-dialog) {
+    max-width: 448px;
+    padding: 24px;
+    border-color: var(--color-border);
+    border-radius: var(--radius-2xl);
+    background:
+      linear-gradient(145deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.012)),
+      var(--color-surface);
+    color: var(--color-foreground);
+    box-shadow: var(--shadow-lg);
+  }
+
+  :global(.confirm-dialog__title) {
+    margin: 0;
+    color: var(--color-foreground);
+    font-family: var(--font-display);
+    font-size: 1.28rem;
+    font-weight: 760;
+    line-height: 1.15;
+    text-wrap: balance;
+  }
+
+  .confirm-dialog__description {
+    margin: -4px 0 4px;
+    color: var(--color-foreground-secondary);
+    font-size: 0.86rem;
+    line-height: 1.52;
+    text-wrap: pretty;
+  }
+
+  .confirm-dialog__field {
+    display: grid;
+    gap: 7px;
+  }
+
+  .confirm-dialog__field label {
+    color: var(--color-foreground-secondary);
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .confirm-dialog__field textarea {
+    width: 100%;
+    min-height: 96px;
+    box-sizing: border-box;
+    resize: vertical;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    background: rgba(255, 255, 255, 0.035);
+    color: var(--color-foreground);
+    font: inherit;
+    font-size: 0.9rem;
+    outline: none;
+    padding: 11px 12px;
+    transition: border-color 0.18s, box-shadow 0.18s;
+  }
+
+  .confirm-dialog__field textarea:focus {
+    border-color: rgba(1, 250, 251, 0.38);
+    box-shadow: 0 0 0 3px rgba(1, 250, 251, 0.12);
+  }
+
+  .confirm-dialog__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .confirm-dialog__button {
+    min-height: 36px;
+    padding: 0 14px;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.025);
+    color: var(--color-foreground-secondary);
+    cursor: pointer;
+    font-size: 0.84rem;
+    font-weight: 700;
+    transition: transform 0.18s, background 0.18s, border-color 0.18s, color 0.18s;
+  }
+
+  .confirm-dialog__button:hover {
+    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.055);
+    color: var(--color-foreground);
+  }
+
+  .confirm-dialog__button--primary {
+    border-color: var(--color-foreground);
+    background: var(--color-foreground);
+    color: var(--color-background);
+  }
+
+  .confirm-dialog__button--danger {
+    border-color: rgba(255, 59, 92, 0.34);
+    background: rgba(255, 59, 92, 0.1);
+    color: var(--color-danger);
+  }
+
+  .confirm-dialog__button:disabled {
+    cursor: not-allowed;
+    opacity: 0.38;
+    transform: none;
+  }
+</style>

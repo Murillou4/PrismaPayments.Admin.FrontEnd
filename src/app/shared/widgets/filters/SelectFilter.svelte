@@ -32,53 +32,76 @@
 
 <Select.Root type="single" value={value} onValueChange={handleValueChange}>
   <Select.Trigger
-    style="
-      background: var(--color-surface-overlay, #1A1A28);
-      border: 1px solid var(--color-border, rgba(255,255,255,0.08));
-      border-radius: var(--radius-md, 12px);
-      padding: 10px 16px;
-      color: {value ? 'var(--color-foreground, #F6F6FF)' : 'var(--color-foreground-secondary, #9090A8)'};
-      font-size: 0.875rem;
-      min-height: 44px;
-      min-width: 160px;
-      cursor: pointer;
-      transition: border-color 0.15s;
-    "
+    class={`select-filter__trigger ${value ? 'select-filter__trigger--active' : ''}`}
   >
     {selectedLabel}
   </Select.Trigger>
-  <Select.Content
-    style="
-      background: var(--color-surface-overlay, #1A1A28);
-      border: 1px solid var(--color-border, rgba(255,255,255,0.08));
-      border-radius: var(--radius-md, 12px);
-      box-shadow: var(--shadow-lg, 0 16px 48px rgba(0,0,0,0.60));
-      overflow: hidden;
-    "
-  >
+  <Select.Content class="select-filter__content">
     {#if value}
       <Select.Item
         value=""
         label="Todos"
-        style="
-          font-size: 0.875rem;
-          color: var(--color-foreground-secondary, #9090A8);
-          min-height: 44px;
-          padding: 10px 16px;
-        "
+        class="select-filter__item select-filter__item--muted"
       />
     {/if}
     {#each options as option}
       <Select.Item
         value={option.value}
         label={option.label}
-        style="
-          font-size: 0.875rem;
-          color: var(--color-foreground, #F6F6FF);
-          min-height: 44px;
-          padding: 10px 16px;
-        "
+        class="select-filter__item"
       />
     {/each}
   </Select.Content>
 </Select.Root>
+
+<style>
+  :global(.select-filter__trigger) {
+    min-width: 160px;
+    min-height: 37px;
+    padding: 0 12px;
+    border-radius: 999px;
+    border-color: var(--color-border-subtle);
+    background: rgba(255, 255, 255, 0.026);
+    color: var(--color-foreground-secondary);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.026);
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition:
+      transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+      background 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+      color 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  :global(.select-filter__trigger:hover),
+  :global(.select-filter__trigger--active) {
+    border-color: rgba(1, 250, 251, 0.26);
+    background: rgba(1, 250, 251, 0.04);
+    color: var(--color-foreground);
+  }
+
+  :global(.select-filter__trigger:hover) {
+    transform: translateY(-1px);
+  }
+
+  :global(.select-filter__content) {
+    overflow: hidden;
+    border-color: var(--color-border);
+    border-radius: var(--radius-xl);
+    background:
+      linear-gradient(145deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.014)),
+      var(--color-surface-overlay);
+    box-shadow: var(--shadow-lg);
+  }
+
+  :global(.select-filter__item) {
+    min-height: 36px;
+    padding: 8px 36px 8px 12px;
+    color: var(--color-foreground);
+    font-size: 0.84rem;
+  }
+
+  :global(.select-filter__item--muted) {
+    color: var(--color-foreground-secondary);
+  }
+</style>

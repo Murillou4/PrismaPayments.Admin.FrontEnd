@@ -33,14 +33,14 @@
     align-items: center;
     justify-content: center;
     gap: 7px;
-    min-height: 34px;
-    padding: 7px 10px;
+    min-height: 30px;
+    padding: 5px 9px;
     border: 1px solid rgba(1, 250, 251, 0.2);
-    border-radius: 10px;
+    border-radius: 999px;
     background: rgba(1, 250, 251, 0.055);
     color: var(--color-brand-cyan);
     font-family: var(--font-body);
-    font-size: 0.78rem;
+    font-size: 0.74rem;
     font-weight: 650;
     cursor: pointer;
     transition: background 0.18s, border-color 0.18s, transform 0.18s;

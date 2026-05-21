@@ -25,7 +25,7 @@
     <p class="sec-label">Provedores</p>
     {#if !loading && section}
       <p class="panel-meta">
-        {section.active.toLocaleString('pt-BR')} ativos ·
+        {section.active.toLocaleString('pt-BR')} ativos /
         <span class:warn={section.unhealthy > 0}>{section.unhealthy.toLocaleString('pt-BR')} com falha</span>
       </p>
     {:else if loading}
@@ -53,7 +53,7 @@
             <p class="card-sub">Check: {new Date(p.lastHealthCheck).toLocaleString('pt-BR')}</p>
           {/if}
           {#if p.supportedMethods?.length}
-            <p class="methods">{p.supportedMethods.join(' · ')}</p>
+            <p class="methods">{p.supportedMethods.join(' / ')}</p>
           {/if}
         </div>
       {/each}
@@ -66,148 +66,207 @@
 <style>
   .panel {
     position: relative;
-    background: #0f0f18;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 20px;
-    padding: 20px;
-    margin-bottom: 20px;
+    padding: 16px;
+    margin-bottom: 18px;
     overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: 20px;
+    background:
+      linear-gradient(145deg, rgba(255, 255, 255, 0.042), rgba(255, 255, 255, 0.012)),
+      var(--color-surface);
+    box-shadow: var(--shadow-md);
   }
+
+  .panel::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 12% 0%, rgba(1, 250, 251, 0.07), transparent 34%),
+      radial-gradient(circle at 82% 20%, rgba(255, 0, 255, 0.05), transparent 28%);
+    opacity: 0.9;
+    pointer-events: none;
+  }
+
   .panel-accent {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
+    inset: 0 auto 0 0;
+    width: 2px;
     background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(0, 230, 118, 0.25) 40%,
-      rgba(255, 59, 92, 0.2) 100%
+      180deg,
+      rgba(1, 250, 251, 0.66),
+      rgba(255, 0, 255, 0.2),
+      transparent
     );
   }
+
+  .panel-head,
+  .grid,
+  .empty {
+    position: relative;
+    z-index: 1;
+  }
+
   .panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
     margin-bottom: 14px;
   }
+
   .sec-label {
-    font-family: 'Outfit', sans-serif;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: #9090a8;
-    margin: 0 0 6px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #1e1e2e;
-  }
-  .panel-meta {
-    font-family: 'Outfit', sans-serif;
-    font-size: 12px;
-    color: #9090a8;
     margin: 0;
+    color: var(--color-foreground-secondary);
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    font-weight: 760;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
   }
+
+  .panel-meta {
+    margin: 0;
+    color: var(--color-foreground-secondary);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 620;
+    text-align: right;
+  }
+
   .panel-meta .warn {
-    color: #ff3b5c;
+    color: var(--color-danger);
   }
+
   .sk-line {
-    height: 14px;
     width: 220px;
-    background: #141420;
-    border-radius: 4px;
-    animation: pulse 1.6s ease-in-out infinite;
+    height: 13px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.055);
+    animation: pulse 1.55s ease-in-out infinite;
   }
+
   .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(218px, 1fr));
+    gap: 10px;
   }
+
   .card {
-    background: #141420;
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    min-height: 92px;
+    padding: 13px;
+    border: 1px solid var(--color-border-subtle);
     border-radius: 14px;
-    padding: 14px 16px;
-    transition: border-color 0.15s;
+    background:
+      linear-gradient(160deg, rgba(255, 255, 255, 0.037), rgba(255, 255, 255, 0.008)),
+      rgba(255, 255, 255, 0.018);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+    transition:
+      transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+      background 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
+
   .card:hover {
-    border-color: rgba(255, 255, 255, 0.12);
+    transform: translateY(-2px);
+    border-color: var(--color-border-hover);
+    background: rgba(255, 255, 255, 0.038);
   }
+
   .card-top {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
     gap: 10px;
   }
+
   .card-name {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 14px;
-    font-weight: 600;
-    color: #f6f6ff;
-    line-height: 1.3;
+    color: var(--color-foreground);
+    font-size: 0.86rem;
+    font-weight: 760;
+    line-height: 1.25;
   }
+
   .badge {
     flex-shrink: 0;
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    padding: 3px 10px;
-    border-radius: 9999px;
+    padding: 3px 8px;
     border: 1px solid;
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    font-weight: 760;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
   }
+
   .badge--success {
-    background: rgba(0, 230, 118, 0.1);
-    color: #00e676;
-    border-color: rgba(0, 230, 118, 0.22);
+    color: var(--color-success);
+    border-color: rgba(0, 230, 118, 0.24);
+    background: rgba(0, 230, 118, 0.075);
   }
+
   .badge--danger {
-    background: rgba(255, 59, 92, 0.1);
-    color: #ff3b5c;
-    border-color: rgba(255, 59, 92, 0.22);
+    color: var(--color-danger);
+    border-color: rgba(255, 59, 92, 0.28);
+    background: rgba(255, 59, 92, 0.075);
   }
+
   .badge--warning {
-    background: rgba(255, 179, 0, 0.1);
-    color: #ffb300;
-    border-color: rgba(255, 179, 0, 0.22);
+    color: var(--color-warning);
+    border-color: rgba(255, 179, 0, 0.26);
+    background: rgba(255, 179, 0, 0.075);
   }
+
   .badge--neutral {
-    background: #141420;
-    color: #9090a8;
-    border-color: rgba(255, 255, 255, 0.08);
+    color: var(--color-foreground-secondary);
+    border-color: var(--color-border-subtle);
+    background: rgba(255, 255, 255, 0.026);
   }
+
   .card-sub {
-    font-family: 'Outfit', sans-serif;
-    font-size: 10px;
-    color: #3a3a50;
-    margin: 8px 0 0;
+    margin: 9px 0 0;
+    color: var(--color-foreground-disabled);
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    line-height: 1.45;
   }
+
   .methods {
-    font-family: 'Outfit', sans-serif;
-    font-size: 11px;
-    color: #9090a8;
     margin: 8px 0 0;
-    line-height: 1.4;
+    color: var(--color-foreground-secondary);
+    font-size: 0.72rem;
+    line-height: 1.45;
   }
+
   .empty {
-    font-family: 'Outfit', sans-serif;
-    font-size: 12px;
-    color: #3a3a50;
     margin: 0;
+    padding: 18px;
+    border: 1px dashed var(--color-border-subtle);
+    border-radius: 14px;
+    color: var(--color-foreground-secondary);
+    font-size: 0.82rem;
+    text-align: center;
   }
+
   .sk {
     min-height: 88px;
-    animation: pulse 1.6s ease-in-out infinite;
+    animation: pulse 1.55s ease-in-out infinite;
   }
+
   @keyframes pulse {
     0%,
     100% {
-      opacity: 0.35;
+      opacity: 0.42;
     }
     50% {
-      opacity: 0.65;
+      opacity: 0.82;
     }
   }
+
   .anim {
-    animation: enter 0.38s cubic-bezier(0.22, 1, 0.36, 1) 160ms both;
+    animation: enter 0.38s cubic-bezier(0.16, 1, 0.3, 1) 160ms both;
   }
+
   @keyframes enter {
     from {
       opacity: 0;
@@ -216,6 +275,17 @@
     to {
       opacity: 1;
       transform: translateY(0);
+    }
+  }
+
+  @media (max-width: 760px) {
+    .panel-head {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .panel-meta {
+      text-align: left;
     }
   }
 </style>

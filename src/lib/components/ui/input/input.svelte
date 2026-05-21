@@ -25,7 +25,7 @@
 		bind:this={ref}
 		data-slot={dataSlot}
 		class={cn(
-			"bg-surface-overlay border-border focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 aria-invalid:border-destructive disabled:opacity-50 h-9 rounded-md border px-3 py-2 text-sm transition-colors file:h-6 file:text-sm file:font-medium focus-visible:ring-3 aria-invalid:ring-3 file:text-foreground placeholder:text-foreground-secondary w-full min-w-0 outline-none file:inline-flex file:border-0 file:bg-transparent disabled:pointer-events-none disabled:cursor-not-allowed",
+			"bg-white/[0.035] border-border focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 aria-invalid:border-destructive disabled:opacity-50 h-9 rounded-lg border px-3 py-2 text-sm transition-colors file:h-6 file:text-sm file:font-medium focus-visible:ring-3 aria-invalid:ring-3 file:text-foreground placeholder:text-foreground-secondary w-full min-w-0 outline-none file:inline-flex file:border-0 file:bg-transparent hover:border-border-hover disabled:pointer-events-none disabled:cursor-not-allowed",
 			className
 		)}
 		type="file"
@@ -38,7 +38,7 @@
 		bind:this={ref}
 		data-slot={dataSlot}
 		class={cn(
-			"bg-surface-overlay border-border focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 aria-invalid:border-destructive disabled:opacity-50 h-9 rounded-md border px-3 py-2 text-sm transition-colors file:h-6 file:text-sm file:font-medium focus-visible:ring-3 aria-invalid:ring-3 file:text-foreground placeholder:text-foreground-secondary w-full min-w-0 outline-none file:inline-flex file:border-0 file:bg-transparent disabled:pointer-events-none disabled:cursor-not-allowed",
+			"bg-white/[0.035] border-border focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 aria-invalid:border-destructive disabled:opacity-50 h-9 rounded-lg border px-3 py-2 text-sm transition-colors file:h-6 file:text-sm file:font-medium focus-visible:ring-3 aria-invalid:ring-3 file:text-foreground placeholder:text-foreground-secondary w-full min-w-0 outline-none file:inline-flex file:border-0 file:bg-transparent hover:border-border-hover disabled:pointer-events-none disabled:cursor-not-allowed",
 			className
 		)}
 		{type}

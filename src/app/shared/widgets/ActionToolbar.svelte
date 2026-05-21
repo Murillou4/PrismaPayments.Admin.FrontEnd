@@ -25,22 +25,23 @@
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
-    gap: 12px;
+    gap: 9px;
     flex-wrap: wrap;
-    margin-bottom: 18px;
-    padding: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.075);
-    border-radius: 16px;
+    margin-bottom: 16px;
+    padding: 9px;
+    border: 1px solid var(--color-border-subtle);
+    border-radius: 18px;
     background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.026), rgba(255, 255, 255, 0.01)),
-      var(--color-surface);
+      linear-gradient(145deg, rgba(255, 255, 255, 0.036), rgba(255, 255, 255, 0.01)),
+      rgba(255, 255, 255, 0.014);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
   }
 
   .toolbar__main,
   .toolbar__trailing {
     display: flex;
     align-items: flex-end;
-    gap: 10px;
+    gap: 8px;
     flex-wrap: wrap;
   }
 

@@ -27,10 +27,11 @@
 
 <style>
   .json-panel {
-    border: 1px solid rgba(255, 255, 255, 0.075);
-    border-radius: 14px;
-    background: #08080d;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    background: #0a0a10;
     overflow: hidden;
+    box-shadow: var(--shadow-md);
   }
 
   .json-panel__header {
@@ -38,18 +39,18 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 10px 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-    background: rgba(255, 255, 255, 0.025);
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--color-border-subtle);
+    background: rgba(255, 255, 255, 0.026);
   }
 
   .json-panel__header p {
     margin: 0;
     color: var(--color-foreground-secondary);
     font-family: var(--font-mono);
-    font-size: 0.68rem;
+    font-size: 0.62rem;
     font-weight: 700;
-    letter-spacing: 0.13em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
   }
 
@@ -60,7 +61,7 @@
     overflow: auto;
     color: #c8c8dd;
     font-family: var(--font-mono);
-    font-size: 0.78rem;
+    font-size: 0.74rem;
     line-height: 1.55;
     white-space: pre-wrap;
     word-break: break-word;

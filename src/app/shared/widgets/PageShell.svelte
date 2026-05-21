@@ -46,23 +46,30 @@
 <style>
   .page-shell {
     width: 100%;
-    max-width: 1240px;
+    max-width: 1320px;
     margin: 0 auto;
-    padding: 30px 32px 52px;
+    padding: 20px 24px 46px;
     box-sizing: border-box;
-    animation: page-in 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: page-in 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
   .page-shell--wide {
-    max-width: 1500px;
+    max-width: 1440px;
   }
 
   .page-shell__header {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 20px;
-    margin-bottom: 24px;
+    gap: 18px;
+    margin-bottom: 16px;
+    padding: 14px 16px;
+    border: 1px solid var(--color-border-subtle);
+    border-radius: 18px;
+    background:
+      linear-gradient(145deg, rgba(255, 255, 255, 0.036), rgba(255, 255, 255, 0.01)),
+      rgba(255, 255, 255, 0.014);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
   }
 
   .page-shell__copy {
@@ -70,12 +77,12 @@
   }
 
   .page-shell__eyebrow {
-    margin: 0 0 8px;
+    margin: 0 0 6px;
     color: var(--color-brand-cyan);
     font-family: var(--font-mono);
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.18em;
+    font-size: 0.62rem;
+    font-weight: 760;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
   }
 
@@ -83,18 +90,18 @@
     margin: 0;
     color: var(--color-foreground);
     font-family: var(--font-display);
-    font-size: clamp(1.75rem, 3vw, 2.35rem);
-    font-weight: 750;
-    line-height: 1.02;
+    font-size: clamp(1.26rem, 2vw, 1.72rem);
+    font-weight: 820;
+    line-height: 1.1;
     letter-spacing: 0;
   }
 
   .page-shell__subtitle {
     max-width: 680px;
-    margin: 9px 0 0;
+    margin: 6px 0 0;
     color: var(--color-foreground-secondary);
-    font-size: 0.92rem;
-    line-height: 1.55;
+    font-size: 0.82rem;
+    line-height: 1.48;
     text-wrap: pretty;
   }
 
@@ -102,18 +109,30 @@
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 10px;
+    gap: 8px;
     flex-wrap: wrap;
   }
 
   .page-shell__content {
     min-width: 0;
+    animation: content-in 0.38s cubic-bezier(0.16, 1, 0.3, 1) 70ms both;
   }
 
   @keyframes page-in {
     from {
       opacity: 0;
-      transform: translateY(8px);
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes content-in {
+    from {
+      opacity: 0;
+      transform: translateY(5px);
     }
     to {
       opacity: 1;
@@ -123,12 +142,13 @@
 
   @media (max-width: 760px) {
     .page-shell {
-      padding: 18px 14px 36px;
+      padding: 16px 14px 34px;
     }
 
     .page-shell__header {
       flex-direction: column;
       align-items: stretch;
+      padding: 14px;
     }
 
     .page-shell__actions {

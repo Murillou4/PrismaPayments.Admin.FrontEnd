@@ -254,10 +254,12 @@
   }
 
   .panel {
-    border: 1px solid rgba(255, 255, 255, 0.075);
-    border-radius: 18px;
-    background: rgba(15, 15, 24, 0.82);
-    box-shadow: 0 22px 54px rgba(0, 0, 0, 0.22);
+    border: 1px solid var(--color-border);
+    border-radius: 20px;
+    background:
+      linear-gradient(145deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.012)),
+      var(--color-surface);
+    box-shadow: var(--shadow-md);
     overflow: hidden;
   }
 
@@ -278,17 +280,17 @@
 
   th,
   td {
-    padding: 14px 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--color-border-subtle);
     text-align: left;
     white-space: nowrap;
   }
 
   th {
-    color: var(--color-foreground-secondary);
+    color: var(--color-foreground-disabled);
     font-family: var(--font-mono);
-    font-size: 0.68rem;
-    letter-spacing: 0.14em;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
   }
 
@@ -325,7 +327,7 @@
   }
 
   .form-panel {
-    padding: 18px;
+    padding: 16px;
   }
 
   .form-head {
@@ -369,12 +371,12 @@
   }
 
   select {
-    min-height: 38px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 10px;
+    min-height: 37px;
+    border: 1px solid var(--color-border-subtle);
+    border-radius: 999px;
     background: var(--color-surface-overlay);
     color: var(--color-foreground);
-    padding: 0 10px;
+    padding: 0 12px;
   }
 
   .check {

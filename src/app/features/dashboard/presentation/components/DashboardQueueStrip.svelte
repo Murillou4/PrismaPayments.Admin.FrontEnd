@@ -72,13 +72,19 @@
 <style>
   .panel {
     position: relative;
-    background: #0f0f18;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background:
+      linear-gradient(145deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.014)),
+      var(--color-surface);
+    border: 1px solid var(--color-border);
     border-radius: 20px;
     padding: 20px 20px 18px;
     margin-bottom: 20px;
     overflow: hidden;
+    box-shadow:
+      0 18px 44px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.055);
   }
+
   .panel-accent {
     position: absolute;
     top: 0;
@@ -96,24 +102,26 @@
   .panel-head {
     margin-bottom: 14px;
   }
+
   .sec-label {
-    font-family: 'Outfit', sans-serif;
+    font-family: var(--font-mono);
     font-size: 10px;
     font-weight: 700;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.13em;
     text-transform: uppercase;
-    color: #9090a8;
+    color: var(--color-foreground-secondary);
     margin: 0 0 4px;
     padding-bottom: 8px;
-    border-bottom: 1px solid #1e1e2e;
+    border-bottom: 1px solid var(--color-border-subtle);
   }
+
   .panel-hint {
-    font-family: 'Outfit', sans-serif;
-    font-size: 11px;
-    color: #3a3a50;
+    font-size: 0.74rem;
+    color: var(--color-foreground-secondary);
     margin: 0;
     letter-spacing: 0.04em;
   }
+
   .strip {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -124,21 +132,32 @@
       grid-template-columns: repeat(2, 1fr);
     }
   }
+
   .q {
-    background: #141420;
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: var(--color-surface-inset);
+    border: 1px solid var(--color-border-subtle);
     border-radius: 14px;
     padding: 12px 14px;
     display: flex;
     flex-direction: column;
     gap: 6px;
     min-width: 0;
-    transition: border-color 0.15s;
+    transition:
+      border-color 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+      background 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   }
+
+  .q:hover {
+    border-color: var(--color-border-hover);
+    transform: translateY(-1px);
+  }
+
   .q--hot {
     border-color: rgba(255, 179, 0, 0.28);
     background: rgba(255, 179, 0, 0.04);
   }
+
   .q-ic {
     width: 28px;
     height: 28px;
@@ -153,28 +172,31 @@
   .q--hot .q-ic {
     background: rgba(255, 179, 0, 0.08);
     border-color: rgba(255, 179, 0, 0.2);
-    color: #ffb300;
+    color: var(--color-warning);
   }
+
   .q-label {
-    font-family: 'Outfit', sans-serif;
+    font-family: var(--font-mono);
     font-size: 9px;
-    font-weight: 600;
-    letter-spacing: 0.14em;
+    font-weight: 700;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: #9090a8;
+    color: var(--color-foreground-secondary);
     line-height: 1.25;
   }
+
   .q-val {
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: var(--font-mono);
     font-size: 1.25rem;
-    font-weight: 700;
-    color: #f6f6ff;
+    font-weight: 720;
+    color: var(--color-foreground);
     font-variant-numeric: tabular-nums;
   }
+
   .sk {
     min-height: 96px;
     animation: pulse 1.6s ease-in-out infinite;
-    background: #141420;
+    background: var(--color-surface-inset);
     border-radius: 14px;
   }
   @keyframes pulse {

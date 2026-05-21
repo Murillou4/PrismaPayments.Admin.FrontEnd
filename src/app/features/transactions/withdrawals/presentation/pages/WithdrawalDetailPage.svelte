@@ -151,12 +151,12 @@
 <style>
   /* ── Layout ──────────────────────────────────── */
   .page {
-    padding: 48px 24px;
-    max-width: 900px;
+    padding: 20px 24px 46px;
+    max-width: 1040px;
     margin: 0 auto;
     display: flex;
     flex-direction: column;
-    gap: 32px;
+    gap: 18px;
     animation: page-enter 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
   @keyframes page-enter {
@@ -168,25 +168,33 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+    padding: 14px 16px;
+    border: 1px solid var(--color-border-subtle);
+    border-radius: 18px;
+    background:
+      linear-gradient(145deg, rgba(255, 255, 255, 0.036), rgba(255, 255, 255, 0.01)),
+      rgba(255, 255, 255, 0.014);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
   }
 
   /* ── Cards ───────────────────────────────────── */
   .card {
-    background: var(--color-surface, #0F0F18);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 16px;
-    padding: 24px;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.24);
+    border: 1px solid var(--color-border);
+    border-radius: 20px;
+    padding: 18px;
+    background:
+      linear-gradient(145deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.012)),
+      var(--color-surface);
+    box-shadow: var(--shadow-md);
   }
   .card-title {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 0.9375rem;
-    font-weight: 600;
-    color: #F6F6FF;
-    margin: 0 0 20px;
-    letter-spacing: 0.02em;
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    font-weight: 760;
+    color: var(--color-foreground-secondary);
+    margin: 0 0 16px;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    opacity: 0.85;
   }
 
   /* ── Field grid ──────────────────────────────── */
@@ -204,21 +212,20 @@
     grid-column: 1 / -1;
   }
   .field-label {
-    font-family: 'Outfit', sans-serif;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.08em;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: #9090A8;
+    color: var(--color-foreground-secondary);
   }
   .field-value {
-    font-family: 'Outfit', sans-serif;
     font-size: 14px;
-    color: #F6F6FF;
-    font-weight: 400;
+    color: var(--color-foreground);
+    font-weight: 600;
   }
   .field-value--mono {
-    font-family: 'Outfit', monospace;
+    font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.02em;
   }
@@ -244,17 +251,19 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 72px 24px;
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    border-radius: 16px;
-    background: #0F0F18;
+    padding: 56px 24px;
+    border: 1px solid var(--color-border);
+    border-radius: 20px;
+    background:
+      radial-gradient(circle at 50% 0%, rgba(255, 59, 92, 0.07), transparent 34%),
+      var(--color-surface);
     text-align: center;
     gap: 0;
   }
   .error-icon {
-    width: 64px;
-    height: 64px;
-    border-radius: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -264,16 +273,15 @@
     color: #FF3B5C;
   }
   .error-title {
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: var(--font-display);
     font-size: 1rem;
     font-weight: 600;
     color: #F6F6FF;
     margin: 0 0 8px;
   }
   .error-desc {
-    font-family: 'Outfit', sans-serif;
     font-size: 13px;
-    color: #9090A8;
+    color: var(--color-foreground-secondary);
     margin: 0 0 20px;
     max-width: 340px;
   }
@@ -282,11 +290,10 @@
     align-items: center;
     gap: 6px;
     padding: 8px 16px;
-    border-radius: 10px;
+    border-radius: 999px;
     border: 1px solid rgba(255, 255, 255, 0.12);
     background: rgba(255, 255, 255, 0.04);
     color: #F6F6FF;
-    font-family: 'Outfit', sans-serif;
     font-size: 13px;
     font-weight: 500;
     text-decoration: none;
@@ -312,7 +319,7 @@
     height: 16px;
     width: 140px;
     border-radius: 6px;
-    background: #141420;
+    background: rgba(255, 255, 255, 0.06);
     animation: sk-pulse 1.6s ease-in-out infinite;
     margin-bottom: 4px;
   }
@@ -325,7 +332,7 @@
     height: 10px;
     width: 80px;
     border-radius: 4px;
-    background: #141420;
+    background: rgba(255, 255, 255, 0.06);
     animation: sk-pulse 1.6s ease-in-out infinite;
     opacity: 0.5;
   }
@@ -333,7 +340,7 @@
     height: 14px;
     width: 160px;
     border-radius: 4px;
-    background: #141420;
+    background: rgba(255, 255, 255, 0.06);
     animation: sk-pulse 1.6s ease-in-out infinite;
   }
   @keyframes sk-pulse {

@@ -4,13 +4,13 @@
 	import { type VariantProps, tv } from "tailwind-variants";
 
 	export const buttonVariants = tv({
-		base: "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 aria-invalid:border-destructive rounded-md border border-transparent bg-clip-padding text-sm font-medium focus-visible:ring-3 hover:-translate-y-px active:translate-y-0 aria-invalid:ring-3 [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+		base: "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 aria-invalid:border-destructive rounded-full border border-transparent bg-clip-padding text-sm font-semibold focus-visible:ring-3 hover:-translate-y-px active:translate-y-0 aria-invalid:ring-3 [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
 		variants: {
 			variant: {
-				default: "bg-gradient-to-br from-background-subtle to-[#18111A] border border-brand-magenta text-foreground hover:shadow-glow-magenta focus-visible:shadow-glow-magenta",
-				outline: "border-border bg-transparent hover:bg-surface-elevated hover:text-foreground aria-expanded:bg-surface-elevated aria-expanded:text-foreground",
+				default: "bg-foreground text-background border-foreground hover:bg-foreground/90 shadow-sm focus-visible:shadow-glow-cyan",
+				outline: "border-border bg-white/[0.025] hover:bg-white/[0.055] hover:text-foreground aria-expanded:bg-white/[0.055] aria-expanded:text-foreground",
 				secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
-				ghost: "hover:bg-surface-elevated hover:text-foreground aria-expanded:bg-surface-elevated aria-expanded:text-foreground",
+				ghost: "hover:bg-white/[0.055] hover:text-foreground aria-expanded:bg-white/[0.055] aria-expanded:text-foreground",
 				destructive: "bg-destructive/10 hover:bg-destructive/20 focus-visible:ring-destructive/20 text-destructive focus-visible:border-destructive/40 hover:bg-destructive/30",
 				link: "text-brand-magenta underline-offset-4 hover:underline",
 			},

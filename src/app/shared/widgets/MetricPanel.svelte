@@ -33,33 +33,66 @@
 
 <style>
   .metric {
-    min-height: 112px;
-    padding: 18px;
-    border: 1px solid rgba(255, 255, 255, 0.075);
-    border-radius: 16px;
+    position: relative;
+    min-height: 100px;
+    padding: 15px;
+    border: 1px solid var(--color-border);
+    border-radius: 18px;
     background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.01)),
+      linear-gradient(145deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.012)),
       var(--color-surface);
-    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
+    box-shadow: var(--shadow-md);
     box-sizing: border-box;
     overflow: hidden;
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+      background 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .metric::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(1, 250, 251, 0.22), transparent);
+    opacity: 0.72;
+  }
+
+  .metric::after {
+    content: '';
+    position: absolute;
+    right: -24px;
+    bottom: -34px;
+    width: 118px;
+    height: 118px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(1, 250, 251, 0.06), transparent 66%);
+    pointer-events: none;
+  }
+
+  .metric:hover {
+    transform: translateY(-2px);
+    border-color: var(--color-border-hover);
+    background:
+      linear-gradient(145deg, rgba(255, 255, 255, 0.052), rgba(255, 255, 255, 0.014)),
+      var(--color-surface);
   }
 
   .metric__top {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 12px;
+    gap: 10px;
+    margin-bottom: 9px;
   }
 
   .metric__label {
     margin: 0;
     color: var(--color-foreground-secondary);
     font-family: var(--font-mono);
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.13em;
+    font-size: 0.6rem;
+    font-weight: 760;
+    letter-spacing: 0.09em;
     text-transform: uppercase;
   }
 
@@ -67,9 +100,9 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 30px;
-    height: 30px;
-    border-radius: 10px;
+    width: 27px;
+    height: 27px;
+    border-radius: 8px;
     background: rgba(255, 255, 255, 0.045);
     color: var(--color-foreground-secondary);
   }
@@ -77,22 +110,30 @@
   .metric__value {
     margin: 0;
     color: var(--color-foreground);
-    font-family: var(--font-display);
-    font-size: clamp(1.45rem, 3vw, 2rem);
-    font-weight: 760;
+    font-family: var(--font-mono);
+    font-size: clamp(1.18rem, 2.3vw, 1.58rem);
+    font-weight: 720;
     line-height: 1.05;
     font-variant-numeric: tabular-nums;
   }
 
   .metric__caption {
-    margin: 8px 0 0;
+    margin: 7px 0 0;
     color: var(--color-foreground-secondary);
-    font-size: 0.82rem;
+    font-size: 0.76rem;
     line-height: 1.45;
   }
 
   .metric--cyan {
     border-color: rgba(1, 250, 251, 0.18);
+  }
+
+  .metric--cyan::before {
+    background: linear-gradient(90deg, transparent, rgba(1, 250, 251, 0.42), transparent);
+  }
+
+  .metric--cyan::after {
+    background: radial-gradient(circle, rgba(1, 250, 251, 0.12), transparent 66%);
   }
 
   .metric--cyan .metric__icon,
@@ -102,6 +143,14 @@
 
   .metric--magenta {
     border-color: rgba(255, 0, 255, 0.18);
+  }
+
+  .metric--magenta::before {
+    background: linear-gradient(90deg, transparent, rgba(255, 0, 255, 0.36), transparent);
+  }
+
+  .metric--magenta::after {
+    background: radial-gradient(circle, rgba(255, 0, 255, 0.12), transparent 66%);
   }
 
   .metric--magenta .metric__icon,
@@ -114,13 +163,25 @@
     color: var(--color-success);
   }
 
+  .metric--success::before {
+    background: linear-gradient(90deg, transparent, rgba(0, 230, 118, 0.34), transparent);
+  }
+
   .metric--warning .metric__icon,
   .metric--warning .metric__value {
     color: var(--color-warning);
   }
 
+  .metric--warning::before {
+    background: linear-gradient(90deg, transparent, rgba(255, 179, 0, 0.34), transparent);
+  }
+
   .metric--danger .metric__icon,
   .metric--danger .metric__value {
     color: var(--color-danger);
+  }
+
+  .metric--danger::before {
+    background: linear-gradient(90deg, transparent, rgba(255, 59, 92, 0.34), transparent);
   }
 </style>

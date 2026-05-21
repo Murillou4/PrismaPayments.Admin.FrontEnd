@@ -15,7 +15,7 @@
 
   function shortId(id: string): string {
     if (id.length <= 10) return id;
-    return `${id.slice(0, 8)}…`;
+    return `${id.slice(0, 8)}...`;
   }
 </script>
 
@@ -62,21 +62,24 @@
 <style>
   .panel {
     position: relative;
-    background: #0f0f18;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 20px;
-    padding: 20px;
     min-width: 0;
+    padding: 16px;
     overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: 20px;
+    background:
+      linear-gradient(145deg, rgba(255, 255, 255, 0.042), rgba(255, 255, 255, 0.012)),
+      var(--color-surface);
+    box-shadow: var(--shadow-md);
   }
+
   .panel-accent {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, rgba(255, 59, 92, 0.35), transparent);
+    inset: 0 auto 0 0;
+    width: 2px;
+    background: linear-gradient(180deg, var(--color-danger), rgba(255, 59, 92, 0.1), transparent);
   }
+
   .panel-head {
     display: flex;
     align-items: center;
@@ -84,120 +87,169 @@
     gap: 12px;
     margin-bottom: 12px;
   }
+
   .sec-label {
-    font-family: 'Outfit', sans-serif;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: #9090a8;
-    margin: 0;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #1e1e2e;
     flex: 1;
+    margin: 0;
+    color: var(--color-foreground-secondary);
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    font-weight: 760;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
   }
+
   .link-all {
-    font-family: 'Outfit', sans-serif;
-    font-size: 11px;
-    font-weight: 600;
-    color: #01fafb;
-    background: none;
-    border: none;
+    padding: 5px 9px;
+    border: 1px solid var(--color-border-subtle);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.026);
+    color: var(--color-brand-cyan);
     cursor: pointer;
-    padding: 4px 0;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    font-weight: 760;
     letter-spacing: 0.06em;
     text-transform: uppercase;
+    transition:
+      transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+      background 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
+
   .link-all:hover {
-    text-decoration: underline;
+    transform: translateY(-1px);
+    border-color: rgba(1, 250, 251, 0.26);
+    background: rgba(1, 250, 251, 0.055);
   }
+
   .link-all:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 2px #ff00ff;
-    border-radius: 4px;
+    box-shadow: 0 0 0 3px rgba(1, 250, 251, 0.14);
   }
+
   .table-wrap {
     overflow-x: auto;
   }
+
   .data {
     width: 100%;
-    font-size: 12px;
     border-collapse: collapse;
-    font-family: 'Outfit', sans-serif;
+    font-size: 0.78rem;
   }
+
   .data th {
+    padding: 8px 10px 9px 0;
+    border-bottom: 1px solid var(--color-border-subtle);
+    color: var(--color-foreground-disabled);
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    font-weight: 760;
+    letter-spacing: 0.1em;
     text-align: left;
-    font-size: 9px;
-    font-weight: 600;
-    letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: #3a3a50;
-    padding: 8px 10px 10px 0;
-    border-bottom: 1px solid #1e1e2e;
   }
+
   .data td {
     padding: 10px 10px 10px 0;
-    border-bottom: 1px solid #1e1e2e;
-    color: #9090a8;
+    border-bottom: 1px solid var(--color-border-subtle);
+    color: var(--color-foreground-secondary);
     vertical-align: middle;
   }
+
+  .data tbody tr {
+    transition: background 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .data tbody tr:hover {
+    background: rgba(255, 255, 255, 0.026);
+  }
+
   .data tr:last-child td {
     border-bottom: none;
   }
+
   .mono {
+    font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
+
   .num {
-    color: #f6f6ff;
-    font-weight: 600;
+    color: var(--color-foreground);
+    font-family: var(--font-mono);
+    font-weight: 700;
     font-variant-numeric: tabular-nums;
   }
+
   .dim {
-    color: #3a3a50;
     max-width: 120px;
     overflow: hidden;
+    color: var(--color-foreground-disabled);
     text-overflow: ellipsis;
   }
+
   .pill {
     display: inline-block;
-    font-size: 10px;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 9999px;
-    background: rgba(255, 59, 92, 0.1);
-    color: #ff3b5c;
-    border: 1px solid rgba(255, 59, 92, 0.22);
+    padding: 3px 8px;
+    border: 1px solid rgba(255, 59, 92, 0.24);
+    border-radius: 999px;
+    background: rgba(255, 59, 92, 0.075);
+    color: var(--color-danger);
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    font-weight: 760;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
   }
+
   .empty {
-    font-family: 'Outfit', sans-serif;
-    font-size: 12px;
-    color: #3a3a50;
-    margin: 12px 0 0;
+    margin: 0;
+    padding: 18px;
+    border: 1px dashed var(--color-border-subtle);
+    border-radius: 14px;
+    color: var(--color-foreground-secondary);
+    font-size: 0.82rem;
+    text-align: center;
   }
+
   .sk-table {
     display: flex;
     flex-direction: column;
     gap: 8px;
   }
+
   .sk-row {
     height: 36px;
-    background: #141420;
-    border-radius: 8px;
-    animation: pulse 1.6s ease-in-out infinite;
+    border-radius: 10px;
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.045),
+      rgba(255, 59, 92, 0.1),
+      rgba(255, 255, 255, 0.045)
+    );
+    background-size: 200% 100%;
+    animation: pulse 1.45s ease-in-out infinite;
   }
+
   @keyframes pulse {
-    0%,
-    100% {
-      opacity: 0.35;
+    0% {
+      background-position: 0% 50%;
+      opacity: 0.45;
     }
     50% {
-      opacity: 0.65;
+      opacity: 0.84;
+    }
+    100% {
+      background-position: -200% 50%;
+      opacity: 0.45;
     }
   }
+
   .anim {
-    animation: enter 0.38s cubic-bezier(0.22, 1, 0.36, 1) 180ms both;
+    animation: enter 0.38s cubic-bezier(0.16, 1, 0.3, 1) 180ms both;
   }
+
   @keyframes enter {
     from {
       opacity: 0;
