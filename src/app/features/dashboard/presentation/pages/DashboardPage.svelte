@@ -24,11 +24,9 @@
     Filter,
     Globe,
     MoreHorizontal,
-    Package,
     RefreshCw,
     RotateCcw,
     ShieldAlert,
-    Sparkles,
     Store,
     Wallet,
     WifiOff
@@ -39,13 +37,12 @@
   import DateRangeFilter from '$appmod/shared/widgets/filters/DateRangeFilter.svelte';
   import SelectFilter from '$appmod/shared/widgets/filters/SelectFilter.svelte';
   import { appServices } from '$core/service_locator/dependencies';
-  import { formatCurrency, formatDate, formatPercentage } from '$appmod/shared/utils/formatters';
+  import { formatCurrency, formatPercentage } from '$appmod/shared/utils/formatters';
   import type {
     AdminDashboardResponse,
     AdminDashboardFilters,
     PaymentStatus,
     PaymentMethod,
-    PaymentItem,
     ProviderItem,
     MethodBreakdown
   } from '../../domain/entities/AdminDashboardResponse';
@@ -58,6 +55,24 @@
     initialError?: string | null;
     initialStartDate?: string;
     initialEndDate?: string;
+  };
+  type OperationalTone = 'success' | 'warning' | 'danger' | 'neutral';
+  type AttentionItem = {
+    key: string;
+    label: string;
+    detail: string;
+    value: string;
+    tone: OperationalTone;
+    href: string;
+  };
+  type FailureMixItem = {
+    key: string;
+    label: string;
+    detail: string;
+    value: number;
+    tone: OperationalTone;
+    href: string;
+    ratio: number;
   };
 
   let {
@@ -165,17 +180,11 @@
     return formatCurrency(cents);
   }
 
-  function shortId(id: string | undefined | null): string {
-    if (!id) return '-';
-    if (id.length <= 10) return id;
-    return `${id.slice(0, 8)}...`;
-  }
-
   function methodLabel(method: string): string {
     return METHOD_LABELS[method] ?? method;
   }
 
-  function statusTone(status: string): 'success' | 'warning' | 'danger' | 'neutral' {
+  function statusTone(status: string): OperationalTone {
     const normalized = status.toLowerCase();
     if (/(paid|completed|active|healthy|ok|up|online|success)/.test(normalized)) return 'success';
     if (/(pending|processing|review|degrad|warn|slow|created)/.test(normalized)) return 'warning';
@@ -362,7 +371,7 @@
         bodyColor: '#9A9AAF',
         padding: 12,
         cornerRadius: 12,
-        titleFont: { family: 'Onest Variable', size: 13, weight: 700 },
+        titleFont: { family: 'Space Grotesk Variable', size: 13, weight: 700 },
         bodyFont: { family: 'Onest Variable', size: 12 }
       }
     },
@@ -370,28 +379,166 @@
       x: {
         stacked: true,
         grid: { display: false },
-        ticks: { color: '#9A9AAF', font: { family: 'JetBrains Mono Variable', size: 10 } },
+        ticks: { color: '#9A9AAF', font: { family: 'Space Grotesk Variable', size: 10 } },
         border: { display: false }
       },
       y: {
         stacked: true,
         grid: { color: 'rgba(255,255,255,0.055)' },
-        ticks: { color: '#6f6f86', font: { family: 'JetBrains Mono Variable', size: 10 } },
+        ticks: { color: '#6f6f86', font: { family: 'Space Grotesk Variable', size: 10 } },
         border: { display: false }
       }
     }
   };
 
   const methodBreakdown = $derived.by((): MethodBreakdown[] => {
-    return dashboard?.payments?.methodBreakdown?.filter((item) => item.amount > 0) ?? [];
-  });
+    const serverBreakdown = dashboard?.payments?.methodBreakdown?.filter((item) => item.amount > 0) ?? [];
+    if (serverBreakdown.length > 0) return serverBreakdown;
 
-  const recentPayments = $derived.by((): PaymentItem[] => {
-    return dashboard?.payments?.items?.slice(0, 5) ?? [];
+    const items = dashboard?.payments?.items ?? [];
+    const paidItems = items.filter((payment) => /paid|completed|success/i.test(payment.status));
+    const sourceItems = paidItems.length > 0 ? paidItems : items;
+    const byMethod = new Map<string, MethodBreakdown>();
+    for (const payment of sourceItems) {
+      if (!payment.amount || payment.amount <= 0) continue;
+      const current = byMethod.get(payment.method) ?? {
+        method: payment.method,
+        total: 0,
+        paid: 0,
+        amount: 0
+      };
+      current.total += 1;
+      current.amount += payment.amount;
+      current.paid += /paid|completed|success/i.test(payment.status) ? 1 : 0;
+      byMethod.set(payment.method, current);
+    }
+
+    return [...byMethod.values()].sort((a, b) => b.amount - a.amount);
   });
 
   const topProviders = $derived.by((): ProviderItem[] => {
     return dashboard?.providers?.items?.slice(0, 5) ?? [];
+  });
+
+  const providerRiskItems = $derived.by((): ProviderItem[] => {
+    const items = dashboard?.providers?.items ?? [];
+    return [...items]
+      .sort((a, b) => {
+        const rank: Record<OperationalTone, number> = { danger: 0, warning: 1, neutral: 2, success: 3 };
+        return rank[statusTone(a.healthStatus)] - rank[statusTone(b.healthStatus)];
+      })
+      .slice(0, 4);
+  });
+
+  const attentionItems = $derived.by((): AttentionItem[] => {
+    if (!dashboard) return [];
+    const failedPayment = dashboard.payments.items.find((payment) => /fail|error|cancel/i.test(payment.status));
+    const pendingPayments = dashboard.payments.items.filter((payment) =>
+      /pending|processing|created/i.test(payment.status)
+    ).length;
+    const items: AttentionItem[] = [];
+
+    if (dashboard.queues.failedPayments > 0) {
+      items.push({
+        key: 'failed-payments',
+        label: 'Pagamentos falhos',
+        detail: failedPayment
+          ? `${methodLabel(failedPayment.method)} - ${formatCurrency(failedPayment.amount)}`
+          : 'Falhas no periodo filtrado',
+        value: dashboard.queues.failedPayments.toLocaleString('pt-BR'),
+        tone: 'danger',
+        href: '/transactions/payments?status=FAILED'
+      });
+    }
+
+    if (dashboard.queues.failedWebhooks > 0) {
+      items.push({
+        key: 'failed-webhooks',
+        label: 'Webhooks em retry',
+        detail: 'Eventos aguardando nova entrega',
+        value: dashboard.queues.failedWebhooks.toLocaleString('pt-BR'),
+        tone: 'danger',
+        href: '/diagnostics'
+      });
+    }
+
+    if (dashboard.queues.openDisputes > 0) {
+      items.push({
+        key: 'open-disputes',
+        label: 'Disputas abertas',
+        detail: 'Chargebacks e contestacoes para revisar',
+        value: dashboard.queues.openDisputes.toLocaleString('pt-BR'),
+        tone: 'warning',
+        href: '/disputes'
+      });
+    }
+
+    if (dashboard.queues.pendingMerchantVerification > 0) {
+      items.push({
+        key: 'pending-kyc',
+        label: 'KYC pendente',
+        detail: 'Merchants aguardando verificacao',
+        value: dashboard.queues.pendingMerchantVerification.toLocaleString('pt-BR'),
+        tone: 'warning',
+        href: '/merchants?verification=PENDING_REVIEW'
+      });
+    }
+
+    if (pendingPayments > 0) {
+      items.push({
+        key: 'pending-payments',
+        label: 'Pagamentos em aberto',
+        detail: 'Pendentes ou processando no filtro',
+        value: pendingPayments.toLocaleString('pt-BR'),
+        tone: 'neutral',
+        href: '/transactions/payments?status=PENDING'
+      });
+    }
+
+    return items.slice(0, 5);
+  });
+
+  const failureMix = $derived.by((): FailureMixItem[] => {
+    if (!dashboard) return [];
+    const items = [
+      {
+        key: 'payments',
+        label: 'Pagamentos falhos',
+        detail: 'Nao capturados ou cancelados',
+        value: dashboard.payments.failed,
+        tone: 'danger' as OperationalTone,
+        href: '/transactions/payments?status=FAILED'
+      },
+      {
+        key: 'webhooks',
+        label: 'Webhooks com erro',
+        detail: 'Falhas de entrega recentes',
+        value: dashboard.webhookFailures.total,
+        tone: 'warning' as OperationalTone,
+        href: '/diagnostics'
+      },
+      {
+        key: 'disputes',
+        label: 'Disputas abertas',
+        detail: 'Casos aguardando tratativa',
+        value: dashboard.disputes.open,
+        tone: 'warning' as OperationalTone,
+        href: '/disputes'
+      },
+      {
+        key: 'withdrawals',
+        label: 'Saques falhos',
+        detail: 'Saidas que precisam de revisao',
+        value: dashboard.withdrawals.failed,
+        tone: 'danger' as OperationalTone,
+        href: '/transactions/withdrawals?status=FAILED'
+      }
+    ];
+    const max = Math.max(1, ...items.map((item) => item.value));
+    return items.map((item) => ({
+      ...item,
+      ratio: item.value === 0 ? 0 : Math.max(8, Math.round((item.value / max) * 100))
+    }));
   });
 
   onMount(() => {
@@ -414,7 +561,7 @@
   });
 </script>
 
-<div class="shop-dashboard">
+<div class="prisma-dashboard">
   <section class="toolbar-row">
     <div class="toolbar-main">
       <button type="button" class="date-chip">
@@ -426,12 +573,12 @@
       <button type="button" class="compare-chip">
         <BarChart3 size={15} strokeWidth={1.5} />
         <strong>Compare:</strong>
-        <span>Previous period</span>
+        <span>Periodo anterior</span>
       </button>
     </div>
     <div class="toolbar-status" class:toolbar-status--error={Boolean(error)}>
       <span></span>
-      <p>{loading ? 'Syncing dashboard' : error ? 'Sync failed' : 'Updated just now'}</p>
+      <p>{loading ? 'Sincronizando operacao' : error ? 'Sincronizacao falhou' : 'Operacao atualizada agora'}</p>
       <button type="button" class="icon-btn" onclick={() => fetchDashboard()} aria-label="Atualizar">
         <RefreshCw size={15} strokeWidth={1.5} class={loading ? 'spin' : ''} />
       </button>
@@ -452,7 +599,7 @@
       <p>{error}</p>
       <Button size="sm" variant="outline" onclick={() => fetchDashboard()}>
         <RefreshCw size={13} strokeWidth={1.5} />
-        Retry
+        Tentar novamente
       </Button>
     </section>
   {/if}
@@ -546,46 +693,51 @@
     <div class="main-grid">
       <section class="left-column">
         <div class="top-grid">
-          <article class="d-card total-revenue-card">
+          <article class="d-card payments-volume-card">
             <div class="card-top">
               <div>
-                <p class="eyebrow">Total revenue</p>
+                <p class="eyebrow">Volume Prisma Pay</p>
                 <h2>{formatCompactCurrency(dashboard.payments.volume)}</h2>
               </div>
-              <button type="button" class="mini-button" onclick={() => goto('/transactions/payments')}>
-                View
-                <ArrowUpRight size={13} strokeWidth={1.5} />
+              <button
+                type="button"
+                class="volume-action"
+                aria-label="Ver pagamentos"
+                title="Ver pagamentos"
+                onclick={() => goto('/transactions/payments')}
+              >
+                <ArrowUpRight size={15} strokeWidth={1.5} />
               </button>
             </div>
 
-            <div class="revenue-summary">
+            <div class="payments-summary">
               <div>
                 <strong>{successRate === null ? '--' : formatPercentage(successRate)}</strong>
-                <span>Approval</span>
+                <span>Aprovacao</span>
               </div>
               <div>
                 <strong>{dashboard.payments.paid.toLocaleString('pt-BR')}</strong>
-                <span>Paid</span>
+                <span>Pagos</span>
               </div>
             </div>
 
-            <div class="category-pills">
+            <div class="payment-rails">
               {#each methodBreakdown.slice(0, 3) as method (method.method)}
-                <button type="button" class="category-pill">
+                <button type="button" class="rail-pill">
                   <span>{methodLabel(method.method)}</span>
                   <strong>{formatCompactCurrency(method.amount)}</strong>
                 </button>
               {/each}
               {#if methodBreakdown.length === 0}
-                <button type="button" class="category-pill">
+                <button type="button" class="rail-pill">
                   <span>PIX</span>
                   <strong>R$ 0</strong>
                 </button>
-                <button type="button" class="category-pill">
+                <button type="button" class="rail-pill">
                   <span>Cartao</span>
                   <strong>R$ 0</strong>
                 </button>
-                <button type="button" class="category-pill">
+                <button type="button" class="rail-pill">
                   <span>Boleto</span>
                   <strong>R$ 0</strong>
                 </button>
@@ -599,9 +751,9 @@
                 <span class="metric-icon cyan"><Wallet size={15} strokeWidth={1.5} /></span>
                 <button type="button" class="ghost-icon" aria-label="Detalhes"><MoreHorizontal size={15} /></button>
               </div>
-              <p>Current balance</p>
+              <p>Saques hoje</p>
               <h3>{formatCompactCurrency(dashboard.withdrawals.todayVolume)}</h3>
-              <small class="trend up"><ArrowUpRight size={12} /> Today volume</small>
+              <small class="trend up"><ArrowUpRight size={12} /> volume do dia</small>
             </article>
 
             <article class="d-card metric-card">
@@ -619,9 +771,9 @@
                 <span class="metric-icon magenta"><CreditCard size={15} strokeWidth={1.5} /></span>
                 <button type="button" class="ghost-icon" aria-label="Detalhes"><MoreHorizontal size={15} /></button>
               </div>
-              <p>Transactions</p>
+              <p>Pagamentos</p>
               <h3>{dashboard.payments.total.toLocaleString('pt-BR')}</h3>
-              <small class="trend up"><ArrowUpRight size={12} /> {dashboard.payments.paid.toLocaleString('pt-BR')} paid</small>
+              <small class="trend up"><ArrowUpRight size={12} /> {dashboard.payments.paid.toLocaleString('pt-BR')} pagos</small>
             </article>
 
             <article class="d-card metric-card">
@@ -629,26 +781,26 @@
                 <span class="metric-icon danger"><ShieldAlert size={15} strokeWidth={1.5} /></span>
                 <button type="button" class="ghost-icon" aria-label="Detalhes"><MoreHorizontal size={15} /></button>
               </div>
-              <p>Risk</p>
+              <p>Risco</p>
               <h3>{dashboard.disputes.open.toLocaleString('pt-BR')}</h3>
               <small class:down={dashboard.disputes.open > 0} class="trend">
                 {#if dashboard.disputes.open > 0}
-                  <ArrowDownRight size={12} /> open disputes
+                  <ArrowDownRight size={12} /> {chargebackRate === null ? 'disputas abertas' : `${formatPercentage(chargebackRate)} em disputa`}
                 {:else}
-                  <ArrowUpRight size={12} /> clear
+                  <ArrowUpRight size={12} /> baixo
                 {/if}
               </small>
             </article>
           </div>
         </div>
 
-        <article class="d-card statistics-card">
-          <div class="statistics-head">
+        <article class="d-card flow-card">
+          <div class="flow-head">
             <div>
-              <h3>Statistics</h3>
-              <span class="live-badge">Live</span>
+              <h3>Fluxo de pagamentos</h3>
+              <span class="live-badge">Ao vivo</span>
             </div>
-            <div class="statistics-actions">
+            <div class="flow-actions">
               <button type="button" class="ghost-icon" aria-label="Download">
                 <Download size={15} strokeWidth={1.5} />
               </button>
@@ -681,7 +833,7 @@
                 {successRate === null ? '0,00%' : formatPercentage(successRate)}
                 <ArrowUpRight size={11} />
               </span>
-              <p>+ {formatCompactCurrency(dashboard.payments.volume)} increased</p>
+              <p>+ {formatCompactCurrency(dashboard.payments.volume)} no periodo</p>
             </div>
             <div class="legend">
               {#each METHOD_DATASETS as item (item.method)}
@@ -696,7 +848,7 @@
             {:else}
               <div class="empty-state">
                 <BarChart3 size={22} strokeWidth={1.5} />
-                <p>No transaction data for this period.</p>
+                <p>Nenhuma transacao neste periodo.</p>
               </div>
             {/if}
           </div>
@@ -707,10 +859,10 @@
         <article class="d-card globe-card">
           <div class="card-top">
             <div>
-              <p class="eyebrow">Global sales</p>
-              <h3>Provider network</h3>
+              <p class="eyebrow">Rede</p>
+              <h3>Providers ativos</h3>
             </div>
-            <button type="button" class="ghost-icon" aria-label="Share">
+            <button type="button" class="ghost-icon" aria-label="Copiar resumo">
               <Copy size={15} strokeWidth={1.5} />
             </button>
           </div>
@@ -731,7 +883,7 @@
                 <span class="provider-mark">{provider.displayName?.slice(0, 1) || provider.name.slice(0, 1)}</span>
                 <div>
                   <strong>{provider.displayName || provider.name}</strong>
-                  <small>{provider.supportedMethods?.join(' / ') || 'Payment rails'}</small>
+                  <small>{provider.supportedMethods?.join(' / ') || 'Meios de pagamento'}</small>
                 </div>
                 <em class:success={tone === 'success'} class:danger={tone === 'danger'} class:warning={tone === 'warning'}>
                   {provider.healthStatus}
@@ -739,51 +891,76 @@
               </button>
             {/each}
             {#if topProviders.length === 0}
-              <div class="empty-list">No providers returned.</div>
+              <div class="empty-list">Nenhum provider retornado.</div>
             {/if}
           </div>
         </article>
 
-        <article class="upgrade-card">
-          <Sparkles size={20} strokeWidth={1.5} />
-          <h3>Prisma Pulse</h3>
-          <p>Risk, queues and provider health in one command center.</p>
-          <button type="button" onclick={() => goto('/diagnostics')}>
-            Open diagnostics
-            <ArrowUpRight size={14} strokeWidth={1.5} />
-          </button>
+        <article class="queue-card" class:queue-card--active={hasQueueBacklog}>
+          <div class="queue-card__head">
+            <AlertTriangle size={18} strokeWidth={1.5} />
+            <div>
+              <p class="eyebrow">Atencao operacional</p>
+              <h3>Fila de decisao</h3>
+            </div>
+          </div>
+
+          <div class="queue-actions">
+            <button type="button" onclick={() => goto('/merchants?verification=PENDING_REVIEW')}>
+              <span>KYC</span>
+              <strong>{dashboard.queues.pendingMerchantVerification}</strong>
+            </button>
+            <button type="button" onclick={() => goto('/diagnostics')}>
+              <span>Webhooks</span>
+              <strong>{dashboard.queues.failedWebhooks}</strong>
+            </button>
+            <button type="button" onclick={() => goto('/disputes')}>
+              <span>Disputas</span>
+              <strong>{dashboard.queues.openDisputes}</strong>
+            </button>
+            <button type="button" onclick={() => goto('/transactions/payments?status=FAILED')}>
+              <span>Falhas</span>
+              <strong>{dashboard.queues.failedPayments}</strong>
+            </button>
+          </div>
         </article>
       </aside>
     </div>
 
     <div class="bottom-grid">
-      <article class="d-card list-card">
+      <article class="d-card list-card attention-card">
         <div class="card-top">
           <div>
-            <p class="eyebrow">Recent orders</p>
-            <h3>Recent payments</h3>
+            <p class="eyebrow">Prioridade</p>
+            <h3>Atencao agora</h3>
           </div>
-          <button type="button" class="mini-button" onclick={() => goto('/transactions/payments')}>View all</button>
+          <button type="button" class="mini-button" onclick={() => goto('/diagnostics')}>Ver fila</button>
         </div>
-        <div class="list-stack">
-          {#each recentPayments as payment (payment.id)}
-            {@const tone = statusTone(payment.status)}
-            <button type="button" class="order-row" onclick={() => goto(`/transactions/payments/${payment.id}`)}>
-              <span class="avatar">{methodLabel(payment.method).slice(0, 2)}</span>
+        <div class="attention-list">
+          {#each attentionItems as item, index (item.key)}
+            <button
+              type="button"
+              class="attention-row"
+              class:danger={item.tone === 'danger'}
+              class:warning={item.tone === 'warning'}
+              class:success={item.tone === 'success'}
+              style:--row-index={index}
+              onclick={() => goto(item.href)}
+            >
+              <span class="attention-dot"></span>
               <div>
-                <strong>#{shortId(payment.id)}</strong>
-                <small>{formatDate(payment.createdAt)}</small>
+                <strong>{item.label}</strong>
+                <small>{item.detail}</small>
               </div>
-              <div class="row-right">
-                <strong>{formatCurrency(payment.amount)}</strong>
-                <em class:success={tone === 'success'} class:warning={tone === 'warning'} class:danger={tone === 'danger'}>
-                  {payment.status}
-                </em>
-              </div>
+              <em>{item.value}</em>
             </button>
           {/each}
-          {#if recentPayments.length === 0}
-            <div class="empty-list">No recent payments.</div>
+          {#if attentionItems.length === 0}
+            <div class="calm-state">
+              <span></span>
+              <strong>Operacao limpa</strong>
+              <small>Sem fila critica para este periodo.</small>
+            </div>
           {/if}
         </div>
       </article>
@@ -791,86 +968,73 @@
       <article class="d-card list-card">
         <div class="card-top">
           <div>
-            <p class="eyebrow">Top products</p>
-            <h3>Top providers</h3>
+            <p class="eyebrow">Infra</p>
+            <h3>Providers em risco</h3>
           </div>
-          <button type="button" class="ghost-icon" aria-label="More"><MoreHorizontal size={15} /></button>
+          <button type="button" class="mini-button" onclick={() => goto('/providers')}>Ver rede</button>
         </div>
-        <div class="list-stack">
-          {#each topProviders as provider (provider.id)}
+        <div class="provider-risk-list">
+          {#each providerRiskItems as provider, index (provider.id)}
             {@const tone = statusTone(provider.healthStatus)}
-            <button type="button" class="product-row" onclick={() => goto('/providers')}>
-              <span class="thumb"><Package size={18} strokeWidth={1.5} /></span>
+            <button
+              type="button"
+              class="provider-risk-row"
+              class:danger={tone === 'danger'}
+              class:warning={tone === 'warning'}
+              class:success={tone === 'success'}
+              style:--row-index={index}
+              onclick={() => goto('/providers')}
+            >
+              <span class="provider-pulse"></span>
               <div>
                 <strong>{provider.displayName || provider.name}</strong>
-                <small>{provider.supportedMethods?.join(' / ') || 'No methods'}</small>
+                <small>{provider.supportedMethods?.join(' / ') || 'Sem metodos'}</small>
               </div>
-              <em class:success={tone === 'success'} class:warning={tone === 'warning'} class:danger={tone === 'danger'}>
-                {provider.healthStatus}
-              </em>
+              <em>{provider.healthStatus}</em>
             </button>
           {/each}
-          {#if topProviders.length === 0}
-            <div class="empty-list">No providers returned.</div>
+          {#if providerRiskItems.length === 0}
+            <div class="empty-list">Nenhum provider retornado.</div>
           {/if}
         </div>
       </article>
 
-      <article class="d-card channel-card">
+      <article class="d-card mix-card">
         <div class="card-top">
           <div>
-            <p class="eyebrow">Sales channel</p>
-            <h3>Payment mix</h3>
+            <p class="eyebrow">Diagnostico</p>
+            <h3>Falhas por origem</h3>
           </div>
-          <button type="button" class="ghost-icon" aria-label="More"><MoreHorizontal size={15} /></button>
         </div>
-        <div class="channel-stack">
-          {#each methodBreakdown as method (method.method)}
-            {@const ratio = dashboard.payments.volume > 0 ? Math.round((method.amount / dashboard.payments.volume) * 100) : 0}
-            <div class="channel-row">
+        <div class="mix-stack">
+          {#each failureMix as item, index (item.key)}
+            <button
+              type="button"
+              class="mix-row"
+              class:danger={item.tone === 'danger'}
+              class:warning={item.tone === 'warning'}
+              style:--row-index={index}
+              onclick={() => goto(item.href)}
+            >
               <div>
-                <strong>{methodLabel(method.method)}</strong>
-                <span>{method.total.toLocaleString('pt-BR')} transactions</span>
+                <strong>{item.label}</strong>
+                <span>{item.detail}</span>
               </div>
-              <div class="channel-value">
-                <strong>{formatCompactCurrency(method.amount)}</strong>
-                <span>{ratio}%</span>
+              <div class="mix-value">
+                <strong>{item.value.toLocaleString('pt-BR')}</strong>
+                <span>{item.ratio}%</span>
               </div>
-              <div class="progress"><span style:width={`${Math.max(ratio, 3)}%`}></span></div>
-            </div>
+              <div class="mix-bar"><span style:--mix-width={`${item.ratio}%`}></span></div>
+            </button>
           {/each}
-          {#if methodBreakdown.length === 0}
-            <div class="empty-list">No payment channels for this period.</div>
-          {/if}
         </div>
       </article>
     </div>
-
-    {#if hasQueueBacklog}
-      <section class="queue-strip">
-        <div>
-          <AlertTriangle size={15} strokeWidth={1.5} />
-          <strong>Operational queue</strong>
-        </div>
-        <button type="button" onclick={() => goto('/merchants?verification=PENDING_REVIEW')}>
-          KYC {dashboard.queues.pendingMerchantVerification}
-        </button>
-        <button type="button" onclick={() => goto('/diagnostics')}>
-          Webhooks {dashboard.queues.failedWebhooks}
-        </button>
-        <button type="button" onclick={() => goto('/disputes')}>
-          Disputes {dashboard.queues.openDisputes}
-        </button>
-        <button type="button" onclick={() => goto('/transactions/payments?status=FAILED')}>
-          Failed {dashboard.queues.failedPayments}
-        </button>
-      </section>
-    {/if}
   {/if}
 </div>
 
 <style>
-  .shop-dashboard {
+  .prisma-dashboard {
     width: min(100%, 1440px);
     margin: 0 auto;
     padding: 16px 24px 48px;
@@ -880,13 +1044,13 @@
   .toolbar-row,
   .toolbar-main,
   .toolbar-status,
-  .statistics-head,
-  .statistics-actions,
+  .flow-head,
+  .flow-actions,
   .card-top,
   .chart-summary,
   .chart-summary > div,
   .legend,
-  .queue-strip {
+  .queue-card__head {
     display: flex;
     align-items: center;
   }
@@ -907,11 +1071,11 @@
   .compare-chip,
   .icon-btn,
   .mini-button,
+  .volume-action,
   .ghost-icon,
   .period-tabs button,
-  .category-pill,
-  .upgrade-card button,
-  .queue-strip button {
+  .rail-pill,
+  .queue-actions button {
     border: 1px solid var(--color-border-subtle);
     background: rgba(255, 255, 255, 0.026);
     color: var(--color-foreground-secondary);
@@ -971,7 +1135,8 @@
   }
 
   .icon-btn,
-  .ghost-icon {
+  .ghost-icon,
+  .volume-action {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -985,7 +1150,8 @@
   .date-chip:hover,
   .compare-chip:hover,
   .mini-button:hover,
-  .category-pill:hover {
+  .volume-action:hover,
+  .rail-pill:hover {
     transform: translateY(-1px);
     border-color: var(--color-border-hover);
     background: rgba(255, 255, 255, 0.046);
@@ -1127,11 +1293,24 @@
     position: relative;
     overflow: hidden;
     border: 1px solid var(--color-border-subtle);
-    border-radius: 24px;
+    border-radius: 22px;
     background:
       linear-gradient(145deg, rgba(255, 255, 255, 0.038), rgba(255, 255, 255, 0.01)),
       var(--color-surface);
     box-shadow: none;
+    animation: card-rise 0.46s cubic-bezier(0.16, 1, 0.3, 1) both;
+    transition:
+      transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+      background 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .d-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.115);
+    background:
+      linear-gradient(145deg, rgba(255, 255, 255, 0.047), rgba(255, 255, 255, 0.014)),
+      var(--color-surface);
   }
 
   .d-card::before {
@@ -1143,23 +1322,43 @@
     pointer-events: none;
   }
 
-  .total-revenue-card,
+  .payments-volume-card,
   .metric-card,
-  .statistics-card,
+  .flow-card,
   .globe-card,
   .list-card,
-  .channel-card {
+  .mix-card {
     padding: 18px;
   }
 
-  .total-revenue-card {
+  .payments-volume-card {
     min-height: 304px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
   }
 
-  .total-revenue-card::after {
+  .payments-volume-card .card-top {
+    align-items: flex-start;
+    min-height: 104px;
+  }
+
+  .payments-volume-card .card-top > div {
+    min-width: 0;
+    padding-right: 46px;
+  }
+
+  .payments-volume-card .eyebrow {
+    margin-bottom: 9px;
+  }
+
+  .payments-volume-card h2 {
+    font-size: clamp(2.42rem, 4vw, 3rem);
+    line-height: 0.92;
+    white-space: nowrap;
+  }
+
+  .payments-volume-card::after {
     content: '';
     position: absolute;
     right: -70px;
@@ -1198,7 +1397,7 @@
   }
 
   h2 {
-    font-family: var(--font-mono);
+    font-family: var(--font-number);
     font-size: clamp(2rem, 4vw, 2.8rem);
     font-weight: 760;
     font-variant-numeric: tabular-nums;
@@ -1221,7 +1420,26 @@
     font-weight: 720;
   }
 
-  .revenue-summary {
+  .volume-action {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border-radius: 999px;
+    color: var(--color-foreground);
+  }
+
+  .volume-action :global(svg) {
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .volume-action:hover :global(svg) {
+    transform: translate(1px, -1px);
+  }
+
+  .payments-summary {
     position: relative;
     z-index: 1;
     display: grid;
@@ -1230,36 +1448,37 @@
     margin-top: 22px;
   }
 
-  .revenue-summary div,
-  .category-pill {
+  .payments-summary div,
+  .rail-pill {
     border-radius: 16px;
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--color-border-subtle);
   }
 
-  .revenue-summary div {
+  .payments-summary div {
     padding: 12px;
   }
 
-  .revenue-summary strong,
-  .revenue-summary span {
+  .payments-summary strong,
+  .payments-summary span {
     display: block;
   }
 
-  .revenue-summary strong {
+  .payments-summary strong {
     color: var(--color-foreground);
-    font-family: var(--font-mono);
+    font-family: var(--font-number);
     font-size: 1.08rem;
     font-weight: 760;
+    font-variant-numeric: tabular-nums;
   }
 
-  .revenue-summary span {
+  .payments-summary span {
     margin-top: 4px;
     color: var(--color-foreground-secondary);
     font-size: 0.76rem;
   }
 
-  .category-pills {
+  .payment-rails {
     position: relative;
     z-index: 1;
     display: grid;
@@ -1268,7 +1487,7 @@
     margin-top: 18px;
   }
 
-  .category-pill {
+  .rail-pill {
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -1277,15 +1496,16 @@
     text-align: left;
   }
 
-  .category-pill span {
+  .rail-pill span {
     color: var(--color-foreground-secondary);
     font-size: 0.72rem;
   }
 
-  .category-pill strong {
+  .rail-pill strong {
     color: var(--color-foreground);
-    font-family: var(--font-mono);
+    font-family: var(--font-number);
     font-size: 0.82rem;
+    font-variant-numeric: tabular-nums;
   }
 
   .metric-card {
@@ -1337,7 +1557,7 @@
   }
 
   .metric-card h3 {
-    font-family: var(--font-mono);
+    font-family: var(--font-number);
     font-size: 1.42rem;
     font-weight: 760;
     font-variant-numeric: tabular-nums;
@@ -1360,17 +1580,17 @@
     color: var(--color-danger);
   }
 
-  .statistics-card {
+  .flow-card {
     min-height: 412px;
   }
 
-  .statistics-head {
+  .flow-head {
     justify-content: space-between;
     gap: 16px;
     margin-bottom: 18px;
   }
 
-  .statistics-head > div:first-child {
+  .flow-head > div:first-child {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -1382,7 +1602,7 @@
     align-items: center;
     gap: 4px;
     border-radius: 999px;
-    font-family: var(--font-mono);
+    font-family: var(--font-number);
     font-size: 0.62rem;
     font-weight: 760;
   }
@@ -1393,7 +1613,7 @@
     color: var(--color-success);
   }
 
-  .statistics-actions {
+  .flow-actions {
     gap: 8px;
   }
 
@@ -1448,7 +1668,7 @@
   }
 
   .date-strip strong {
-    font-family: var(--font-mono);
+    font-family: var(--font-number);
     font-size: 0.78rem;
   }
 
@@ -1596,16 +1816,12 @@
     animation-delay: -1.1s;
   }
 
-  .location-list,
-  .list-stack,
-  .channel-stack {
+  .location-list {
     display: flex;
     flex-direction: column;
   }
 
-  .location-row,
-  .order-row,
-  .product-row {
+  .location-row {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
@@ -1620,15 +1836,11 @@
     text-align: left;
   }
 
-  .location-row:last-child,
-  .order-row:last-child,
-  .product-row:last-child {
+  .location-row:last-child {
     border-bottom: 0;
   }
 
-  .provider-mark,
-  .avatar,
-  .thumb {
+  .provider-mark {
     display: grid;
     place-items: center;
     width: 38px;
@@ -1637,19 +1849,12 @@
     color: var(--color-brand-cyan);
     background: rgba(1, 250, 251, 0.07);
     border: 1px solid rgba(1, 250, 251, 0.14);
-    font-family: var(--font-mono);
+    font-family: var(--font-number);
     font-size: 0.72rem;
     font-weight: 760;
   }
 
-  .thumb {
-    border-radius: 12px;
-  }
-
-  .location-row strong,
-  .order-row strong,
-  .product-row strong,
-  .channel-row strong {
+  .location-row strong {
     display: block;
     color: var(--color-foreground);
     font-size: 0.84rem;
@@ -1659,24 +1864,19 @@
     white-space: nowrap;
   }
 
-  .location-row small,
-  .order-row small,
-  .product-row small,
-  .channel-row span {
+  .location-row small {
     display: block;
     color: var(--color-foreground-secondary);
     font-size: 0.72rem;
     margin-top: 2px;
   }
 
-  .location-row em,
-  .order-row em,
-  .product-row em {
+  .location-row em {
     padding: 3px 7px;
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.035);
     color: var(--color-foreground-secondary);
-    font-family: var(--font-mono);
+    font-family: var(--font-number);
     font-size: 0.56rem;
     font-style: normal;
     font-weight: 760;
@@ -1698,42 +1898,75 @@
     background: rgba(255, 59, 92, 0.08);
   }
 
-  .upgrade-card {
+  .queue-card {
     position: relative;
     overflow: hidden;
     min-height: 164px;
     padding: 22px;
-    border-radius: 24px;
+    border-radius: 22px;
     background:
-      radial-gradient(circle at 84% 8%, rgba(1, 250, 251, 0.38), transparent 32%),
-      linear-gradient(135deg, rgba(255, 0, 255, 0.74), rgba(114, 34, 131, 0.78), rgba(1, 250, 251, 0.28));
+      radial-gradient(circle at 86% 4%, rgba(1, 250, 251, 0.18), transparent 34%),
+      linear-gradient(135deg, rgba(255, 0, 255, 0.12), rgba(255, 179, 0, 0.055), rgba(1, 250, 251, 0.09)),
+      rgba(255, 255, 255, 0.026);
+    border: 1px solid rgba(255, 255, 255, 0.075);
     color: var(--color-foreground);
+    animation: card-rise 0.46s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
-  .upgrade-card h3 {
-    margin: 12px 0 6px;
-    font-size: 1.3rem;
+  .queue-card--active {
+    border-color: rgba(255, 179, 0, 0.22);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.075);
   }
 
-  .upgrade-card p {
-    max-width: 280px;
-    margin: 0 0 16px;
-    color: rgba(246, 246, 255, 0.78);
-    font-size: 0.86rem;
-    line-height: 1.45;
+  .queue-card__head {
+    gap: 10px;
+    color: var(--color-warning);
   }
 
-  .upgrade-card button {
-    display: inline-flex;
+  .queue-card h3 {
+    margin: 2px 0 0;
+    font-size: 1.16rem;
+  }
+
+  .queue-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 18px;
+  }
+
+  .queue-actions button {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     gap: 8px;
-    min-height: 34px;
-    padding: 0 12px;
-    border-color: rgba(255, 255, 255, 0.24);
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.12);
+    min-height: 40px;
+    padding: 0 10px;
+    border-radius: 14px;
+    text-align: left;
+  }
+
+  .queue-actions button:hover {
+    transform: translateY(-1px);
+    border-color: rgba(255, 179, 0, 0.22);
+    background: rgba(255, 255, 255, 0.048);
     color: var(--color-foreground);
-    font-weight: 720;
+  }
+
+  .queue-actions span {
+    overflow: hidden;
+    color: var(--color-foreground-secondary);
+    font-size: 0.72rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .queue-actions strong {
+    color: var(--color-foreground);
+    font-family: var(--font-number);
+    font-size: 0.88rem;
+    font-weight: 780;
+    font-variant-numeric: tabular-nums;
   }
 
   .bottom-grid {
@@ -1744,75 +1977,236 @@
   }
 
   .list-card,
-  .channel-card {
+  .mix-card {
     min-height: 326px;
   }
 
-  .list-stack {
-    margin-top: 12px;
+  .attention-list,
+  .provider-risk-list,
+  .mix-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 16px;
   }
 
-  .row-right,
-  .channel-value {
+  .attention-row,
+  .provider-risk-row,
+  .mix-row {
+    width: 100%;
+    border: 1px solid rgba(255, 255, 255, 0.055);
+    background: rgba(255, 255, 255, 0.022);
+    color: inherit;
+    cursor: pointer;
+    text-align: left;
+    animation: row-rise 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: calc(var(--row-index, 0) * 55ms);
+    transition:
+      transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+      background 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .attention-row:hover,
+  .provider-risk-row:hover,
+  .mix-row:hover {
+    transform: translateY(-1px);
+    border-color: rgba(1, 250, 251, 0.16);
+    background: rgba(255, 255, 255, 0.036);
+  }
+
+  .attention-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 11px;
+    min-height: 54px;
+    padding: 10px 12px;
+    border-radius: 16px;
+  }
+
+  .attention-dot,
+  .provider-pulse {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: var(--color-brand-cyan);
+    box-shadow: 0 0 0 5px rgba(1, 250, 251, 0.08);
+    animation: status-pulse 2.2s ease-in-out infinite;
+  }
+
+  .attention-row.warning .attention-dot,
+  .provider-risk-row.warning .provider-pulse {
+    background: var(--color-warning);
+    box-shadow: 0 0 0 5px rgba(255, 179, 0, 0.08);
+  }
+
+  .attention-row.danger .attention-dot,
+  .provider-risk-row.danger .provider-pulse {
+    background: var(--color-danger);
+    box-shadow: 0 0 0 5px rgba(255, 59, 92, 0.08);
+  }
+
+  .attention-row.success .attention-dot,
+  .provider-risk-row.success .provider-pulse {
+    background: var(--color-success);
+    box-shadow: 0 0 0 5px rgba(0, 230, 118, 0.08);
+  }
+
+  .attention-row strong,
+  .provider-risk-row strong,
+  .mix-row strong {
+    display: block;
+    overflow: hidden;
+    color: var(--color-foreground);
+    font-size: 0.84rem;
+    font-weight: 730;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .attention-row small,
+  .provider-risk-row small,
+  .mix-row span {
+    display: block;
+    margin-top: 3px;
+    color: var(--color-foreground-secondary);
+    font-size: 0.72rem;
+    line-height: 1.35;
+  }
+
+  .attention-row em,
+  .provider-risk-row em,
+  .mix-value strong {
+    color: var(--color-foreground);
+    font-family: var(--font-number);
+    font-variant-numeric: tabular-nums;
+    font-style: normal;
+  }
+
+  .attention-row em {
+    min-width: 34px;
     text-align: right;
+    font-size: 1rem;
+    font-weight: 760;
   }
 
-  .row-right strong,
-  .channel-value strong {
-    font-family: var(--font-mono);
+  .provider-risk-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 11px;
+    min-height: 56px;
+    padding: 10px 12px;
+    border-radius: 16px;
+  }
+
+  .provider-risk-row em {
+    padding: 3px 7px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.035);
+    color: var(--color-foreground-secondary);
+    font-size: 0.56rem;
+    font-weight: 760;
+    text-transform: uppercase;
+  }
+
+  .provider-risk-row.success em {
+    color: var(--color-success);
+    background: rgba(0, 230, 118, 0.08);
+  }
+
+  .provider-risk-row.warning em {
+    color: var(--color-warning);
+    background: rgba(255, 179, 0, 0.08);
+  }
+
+  .provider-risk-row.danger em {
+    color: var(--color-danger);
+    background: rgba(255, 59, 92, 0.08);
+  }
+
+  .calm-state {
+    display: grid;
+    place-items: center;
+    min-height: 210px;
+    padding: 24px;
+    text-align: center;
+    color: var(--color-foreground-secondary);
+  }
+
+  .calm-state span {
+    width: 42px;
+    height: 42px;
+    border: 1px solid rgba(0, 230, 118, 0.18);
+    border-radius: 999px;
+    background:
+      radial-gradient(circle, rgba(0, 230, 118, 0.16), transparent 64%),
+      rgba(0, 230, 118, 0.04);
+    animation: status-pulse 2.3s ease-in-out infinite;
+  }
+
+  .calm-state strong {
+    margin-top: 12px;
+    color: var(--color-foreground);
+    font-size: 0.92rem;
+  }
+
+  .calm-state small {
+    margin-top: 4px;
     font-size: 0.78rem;
   }
 
-  .channel-stack {
-    gap: 15px;
-    margin-top: 18px;
-  }
-
-  .channel-row {
+  .mix-row {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 10px 14px;
     align-items: center;
+    padding: 12px;
+    border-radius: 16px;
   }
 
-  .progress {
+  .mix-value {
+    min-width: 54px;
+    text-align: right;
+  }
+
+  .mix-value strong {
+    display: block;
+    font-size: 0.98rem;
+    font-weight: 760;
+  }
+
+  .mix-value span {
+    margin-top: 2px;
+    font-size: 0.62rem;
+  }
+
+  .mix-bar {
     grid-column: 1 / -1;
-    height: 7px;
+    height: 6px;
     overflow: hidden;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.045);
   }
 
-  .progress span {
+  .mix-bar span {
     display: block;
+    width: var(--mix-width);
     height: 100%;
     border-radius: inherit;
     background: linear-gradient(90deg, var(--color-brand-cyan), var(--color-brand-magenta));
+    transform-origin: left center;
+    animation: bar-fill 0.78s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: calc((var(--row-index, 0) * 65ms) + 120ms);
   }
 
-  .queue-strip {
-    justify-content: space-between;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-top: 18px;
-    padding: 12px;
-    border: 1px solid rgba(255, 179, 0, 0.18);
-    border-radius: 18px;
-    background: rgba(255, 179, 0, 0.06);
+  .mix-row.warning .mix-bar span {
+    background: linear-gradient(90deg, var(--color-warning), var(--color-brand-magenta));
   }
 
-  .queue-strip > div {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--color-warning);
-  }
-
-  .queue-strip button {
-    min-height: 30px;
-    padding: 0 10px;
-    border-radius: 999px;
-    color: var(--color-foreground);
+  .mix-row.danger .mix-bar span {
+    background: linear-gradient(90deg, var(--color-danger), var(--color-brand-magenta));
   }
 
   .template-skeleton {
@@ -1878,6 +2272,39 @@
     min-height: 164px;
   }
 
+  @keyframes card-rise {
+    from {
+      transform: translateY(8px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes row-rise {
+    from {
+      transform: translateY(6px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes bar-fill {
+    from {
+      transform: scaleX(0);
+      opacity: 0.5;
+    }
+    to {
+      transform: scaleX(1);
+      opacity: 1;
+    }
+  }
+
   @keyframes skeleton-wave {
     0% {
       background-position: 0% 50%;
@@ -1916,6 +2343,24 @@
     }
   }
 
+  @media (prefers-reduced-motion: reduce) {
+    .d-card,
+    .queue-card,
+    .attention-row,
+    .provider-risk-row,
+    .mix-row,
+    .mix-bar span,
+    .pin,
+    .attention-dot,
+    .provider-pulse,
+    .globe-ring,
+    .calm-state span,
+    .toolbar-status > span {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+
   @media (max-width: 1180px) {
     .main-grid,
     .template-skeleton {
@@ -1948,18 +2393,18 @@
   }
 
   @media (max-width: 620px) {
-    .shop-dashboard {
+    .prisma-dashboard {
       padding: 12px 14px 34px;
     }
 
     .metric-grid,
-    .category-pills,
-    .revenue-summary,
+    .payment-rails,
+    .payments-summary,
     .skeleton-kpis {
       grid-template-columns: 1fr;
     }
 
-    .statistics-head,
+    .flow-head,
     .chart-summary {
       align-items: flex-start;
       flex-direction: column;
@@ -1970,15 +2415,23 @@
     }
 
     .location-row,
-    .order-row,
-    .product-row {
+    .attention-row,
+    .provider-risk-row {
       grid-template-columns: auto minmax(0, 1fr);
     }
 
     .location-row em,
-    .product-row em,
-    .row-right {
+    .attention-row em,
+    .provider-risk-row em {
       grid-column: 2;
+      text-align: left;
+    }
+
+    .mix-row {
+      grid-template-columns: 1fr;
+    }
+
+    .mix-value {
       text-align: left;
     }
   }

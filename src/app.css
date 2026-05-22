@@ -39,6 +39,7 @@
   --font-body: 'Onest Variable', sans-serif;
   --font-onest: 'Onest Variable', sans-serif;
   --font-mono: 'JetBrains Mono Variable', monospace;
+  --font-number: 'Space Grotesk Variable', 'JetBrains Mono Variable', monospace;
   --font-syne: 'Syne Variable', sans-serif;
 
   /* Border Radius */
@@ -133,9 +134,9 @@
   }
 
   .prisma-kpi {
-    font-family: var(--font-mono);
+    font-family: var(--font-number);
     font-variant-numeric: tabular-nums;
-    letter-spacing: -0.015em;
+    letter-spacing: 0;
   }
 }
 

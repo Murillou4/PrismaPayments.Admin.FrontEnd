@@ -12,13 +12,14 @@
     Bell,
     BookOpen,
     Building2,
+    ChevronRight,
     CreditCard,
+    Ellipsis,
     Gauge,
     LayoutDashboard,
     LockKeyhole,
     LogOut,
     Plug,
-    ScanFace,
     Search,
     Settings2,
     ShieldCheck,
@@ -47,15 +48,13 @@
   let searching = $state(false);
   let searchItems = $state<SearchResultItem[]>([]);
   let searchError = $state<string | null>(null);
+  let navMoreOpen = $state(false);
+  let notificationOpen = $state(false);
   let searchTimer: number | null = null;
 
   const merchantService = appServices.merchants();
   const platformService = appServices.platform();
 
-  const isPendingActive = $derived(
-    $page.url.pathname === '/merchants' &&
-    $page.url.searchParams.get('verification') === 'PENDING_REVIEW'
-  );
   const isTxnActive = $derived($page.url.pathname.startsWith('/transactions'));
 
   const navSections = $derived.by(() => {
@@ -65,8 +64,7 @@
         label: 'Operacao',
         items: [
           { href: '/dashboard', label: 'Dashboard', Icon: LayoutDashboard, minRole: 'VIEWER', badge: 0 },
-          { href: '/merchants', label: 'Merchants', Icon: Users, minRole: 'VIEWER', badge: 0 },
-          { href: '/merchants?verification=PENDING_REVIEW', label: 'KYC pendente', Icon: ScanFace, minRole: 'SUPPORT', badge: pendingKYCCount },
+          { href: '/merchants', label: 'Merchants', Icon: Users, minRole: 'VIEWER', badge: pendingKYCCount },
           { href: '/disputes', label: 'Disputas', Icon: AlertTriangle, minRole: 'SUPPORT', badge: 0 }
         ].filter((item) => hasPermission(userRole, item.minRole as AdminRole))
       },
@@ -75,34 +73,35 @@
         items: [
           { href: '/transactions/payments', label: 'Pagamentos', Icon: CreditCard, minRole: 'SUPPORT', badge: 0 },
           { href: '/transactions/withdrawals', label: 'Saques', Icon: ArrowDownToLine, minRole: 'SUPPORT', badge: 0 },
-          { href: '/fees', label: 'Taxas', Icon: SlidersHorizontal, minRole: 'VIEWER', badge: 0 },
-          { href: '/providers', label: 'Provedores', Icon: Plug, minRole: 'SUPPORT', badge: 0 }
+          { href: '/fees', label: 'Taxas', Icon: SlidersHorizontal, minRole: 'VIEWER', badge: 0, collapsed: true },
+          { href: '/providers', label: 'Provedores', Icon: Plug, minRole: 'SUPPORT', badge: 0, collapsed: true }
         ].filter((item) => hasPermission(userRole, item.minRole as AdminRole))
       },
       {
         label: 'Plataforma',
         items: [
-          { href: '/tenants', label: 'Tenants', Icon: Building2, minRole: 'SUPER_ADMIN', badge: 0 },
-          { href: '/admin-users', label: 'Admins', Icon: UserCog, minRole: 'SUPER_ADMIN', badge: 0 },
-          { href: '/audit', label: 'Auditoria', Icon: BookOpen, minRole: 'SUPPORT', badge: 0 },
-          { href: '/diagnostics', label: 'Dev Logs', Icon: Activity, minRole: 'ADMIN', badge: 0 },
-          { href: '/config', label: 'Configuracao', Icon: Settings2, minRole: 'ADMIN', badge: 0 },
-          { href: '/settings/security', label: 'Seguranca', Icon: LockKeyhole, minRole: 'VIEWER', badge: 0 }
+          { href: '/tenants', label: 'Tenants', Icon: Building2, minRole: 'SUPER_ADMIN', badge: 0, collapsed: true },
+          { href: '/admin-users', label: 'Admins', Icon: UserCog, minRole: 'SUPER_ADMIN', badge: 0, collapsed: true },
+          { href: '/audit', label: 'Auditoria', Icon: BookOpen, minRole: 'SUPPORT', badge: 0, collapsed: true },
+          { href: '/diagnostics', label: 'Dev Logs', Icon: Activity, minRole: 'ADMIN', badge: 0, collapsed: true },
+          { href: '/config', label: 'Config', Icon: Settings2, minRole: 'ADMIN', badge: 0, collapsed: true },
+          { href: '/settings/security', label: 'Seguranca', Icon: LockKeyhole, minRole: 'VIEWER', badge: 0, collapsed: true }
         ].filter((item) => hasPermission(userRole, item.minRole as AdminRole))
       }
     ].filter((section) => section.items.length > 0);
   });
 
-  const quickTabs = $derived.by(() => {
-    const userRole = role as AdminRole | null;
-    return [
-      { href: '/dashboard', label: 'Dashboard', minRole: 'VIEWER' },
-      { href: '/transactions/payments', label: 'Pagamentos', minRole: 'SUPPORT' },
-      { href: '/transactions/withdrawals', label: 'Saques', minRole: 'SUPPORT' },
-      { href: '/merchants', label: 'Merchants', minRole: 'VIEWER' },
-      { href: '/disputes', label: 'Disputas', minRole: 'SUPPORT' }
-    ].filter((item) => hasPermission(userRole, item.minRole as AdminRole));
-  });
+  const primaryNavItems = $derived.by(() =>
+    navSections.flatMap((section) => section.items.filter((item) => !('collapsed' in item && item.collapsed)))
+  );
+
+  const secondaryNavItems = $derived.by(() =>
+    navSections.flatMap((section) => section.items.filter((item) => 'collapsed' in item && item.collapsed))
+  );
+
+  const secondaryNavActive = $derived.by(() =>
+    secondaryNavItems.some((item) => isActive(item.href))
+  );
 
   const userInitials = $derived.by(() => {
     const name = admin?.name || admin?.email || 'Admin';
@@ -115,6 +114,8 @@
   });
 
   const displayName = $derived(admin?.name ?? admin?.email?.split('@')[0] ?? 'Admin');
+  const canReviewKYC = $derived(hasPermission(role as AdminRole | null, 'SUPPORT'));
+  const importantTaskCount = $derived(canReviewKYC ? pendingKYCCount : 0);
 
   const activeLabel = $derived.by(() => {
     if (isTxnActive) return 'Transacoes';
@@ -200,7 +201,44 @@
     searchItems = [];
     await goto(destinationFor(item));
   }
+
+  function toggleNavMore() {
+    navMoreOpen = !navMoreOpen;
+  }
+
+  function closeNavMore() {
+    navMoreOpen = false;
+  }
+
+  function toggleNotifications() {
+    notificationOpen = !notificationOpen;
+    navMoreOpen = false;
+  }
+
+  function closeNotifications() {
+    notificationOpen = false;
+  }
+
+  function handleNavMoreKeydown(event: KeyboardEvent) {
+    if (event.key !== 'Escape') return;
+    if (navMoreOpen) {
+      navMoreOpen = false;
+      document.querySelector<HTMLButtonElement>('.nav-pill--more')?.focus();
+    }
+    if (notificationOpen) {
+      notificationOpen = false;
+      document.querySelector<HTMLButtonElement>('.icon-action--bell')?.focus();
+    }
+  }
+
+  function handleWindowClick(event: MouseEvent) {
+    if (!notificationOpen || !(event.target instanceof Element)) return;
+    if (event.target.closest('.notification-wrap')) return;
+    notificationOpen = false;
+  }
 </script>
+
+<svelte:window onkeydown={handleNavMoreKeydown} onclick={handleWindowClick} />
 
 <div class="admin-shell" use:parallax={{ intensity: 0.72 }}>
   <div class="admin-depth-tabs" aria-hidden="true">
@@ -215,20 +253,72 @@
           <img src="/Prisma_Pay_White.svg" alt="Prisma Pay" class="brand-logo" />
         </a>
 
-        <nav class="top-tabs" aria-label="Atalhos principais">
-          {#each quickTabs as tab}
-            <a href={tab.href} class:top-tabs__item--active={isActive(tab.href)}>{tab.label}</a>
-          {/each}
-        </nav>
-
         <div class="header-actions">
-          <button type="button" class="icon-action icon-action--bell" onclick={() => (searchOpen = true)} aria-label="Abrir busca">
-            <Bell size={17} strokeWidth={1.5} />
-            {#if pendingKYCCount > 0}
-              <span>{pendingKYCCount}</span>
+          <div class="notification-wrap">
+            <button
+              type="button"
+              class="icon-action icon-action--bell"
+              aria-label="Abrir tarefas importantes"
+              aria-expanded={notificationOpen}
+              aria-controls="admin-notifications"
+              aria-haspopup="dialog"
+              onclick={toggleNotifications}
+            >
+              <Bell size={17} strokeWidth={1.5} />
+              {#if importantTaskCount > 0}
+                <span>{importantTaskCount}</span>
+              {/if}
+            </button>
+
+            {#if notificationOpen}
+              <div id="admin-notifications" class="notification-popover" role="dialog" aria-label="Tarefas importantes">
+                <div class="notification-popover__header">
+                  <span>
+                    <small>Prisma</small>
+                    <strong>Tarefas importantes</strong>
+                  </span>
+                  <em class:notification-popover__status--empty={importantTaskCount === 0}>
+                    {importantTaskCount > 0 ? `${importantTaskCount} aberta${importantTaskCount === 1 ? '' : 's'}` : 'Tudo limpo'}
+                  </em>
+                </div>
+
+                <div class="notification-popover__list">
+                  {#if canReviewKYC && pendingKYCCount > 0}
+                    <a
+                      href="/merchants?verification=PENDING_REVIEW"
+                      class="notification-task"
+                      onclick={closeNotifications}
+                    >
+                      <span class="notification-task__icon">
+                        <Users size={15} strokeWidth={1.65} />
+                      </span>
+                      <span class="notification-task__body">
+                        <strong>KYC pendente</strong>
+                        <small>
+                          {pendingKYCCount === 1
+                            ? '1 merchant aguardando revisao.'
+                            : `${pendingKYCCount} merchants aguardando revisao.`}
+                        </small>
+                      </span>
+                      <span class="notification-task__action">
+                        Revisar
+                        <ChevronRight size={13} strokeWidth={1.8} />
+                      </span>
+                    </a>
+                  {:else}
+                    <div class="notification-empty">
+                      <span>
+                        <ShieldCheck size={18} strokeWidth={1.55} />
+                      </span>
+                      <strong>Nenhuma tarefa critica</strong>
+                      <small>KYC, disputas e saques travados aparecem aqui quando exigirem acao.</small>
+                    </div>
+                  {/if}
+                </div>
+              </div>
             {/if}
-          </button>
-          <button type="button" class="user-chip" onclick={() => (searchOpen = true)} title="Buscar tudo">
+          </div>
+          <a href="/settings/security" class="user-chip" title="Seguranca da conta">
             <span class="user-chip__avatar">{userInitials}</span>
             <span class="user-chip__meta">
               <strong>{displayName}</strong>
@@ -237,7 +327,7 @@
             {#if admin?.twoFactorEnabled}
               <ShieldCheck size={14} strokeWidth={1.5} class="user-chip__secure" />
             {/if}
-          </button>
+          </a>
           <form method="POST" action="/logout" use:enhance>
             <button type="submit" class="icon-action" aria-label="Sair">
               <LogOut size={17} strokeWidth={1.5} />
@@ -260,24 +350,55 @@
       </div>
 
       <nav class="nav-ribbon" aria-label="Navegacao principal">
-        {#each navSections as section}
-          <div class="nav-ribbon__group">
-            <span class="nav-ribbon__label">{section.label}</span>
-            <div class="nav-ribbon__items">
-              {#each section.items as item}
-                {@const Icon = item.Icon}
-                {@const active = item.href.includes('?') ? isPendingActive : isActive(item.href)}
-                <a href={item.href} class="nav-pill" class:nav-pill--active={active}>
-                  <Icon size={15} strokeWidth={1.5} />
-                  <span>{item.label}</span>
-                  {#if item.badge && item.badge > 0}
-                    <em>{item.badge}</em>
-                  {/if}
-                </a>
-              {/each}
-            </div>
-          </div>
+        {#each primaryNavItems as item}
+          {@const Icon = item.Icon}
+          {@const active = isActive(item.href)}
+          <a href={item.href} class="nav-pill" class:nav-pill--active={active}>
+            <Icon size={14} strokeWidth={1.55} />
+            <span>{item.label}</span>
+            {#if item.badge && item.badge > 0}
+              <em>{item.badge}</em>
+            {/if}
+          </a>
         {/each}
+
+        {#if secondaryNavItems.length > 0}
+          <div class="nav-more">
+            <button
+              type="button"
+              class="nav-pill nav-pill--more"
+              class:nav-pill--active={secondaryNavActive}
+              aria-expanded={navMoreOpen}
+              aria-controls="admin-more-nav"
+              aria-haspopup="menu"
+              onclick={toggleNavMore}
+            >
+              <Ellipsis size={15} strokeWidth={1.7} />
+              <span>Mais</span>
+              <ChevronRight size={13} strokeWidth={1.8} class="nav-more__chevron" />
+            </button>
+
+            {#if navMoreOpen}
+              <div id="admin-more-nav" class="nav-more__menu" role="menu" aria-label="Mais secoes">
+                {#each secondaryNavItems as item, index}
+                  {@const Icon = item.Icon}
+                  {@const active = isActive(item.href)}
+                  <a
+                    href={item.href}
+                    class="nav-more__item"
+                    class:nav-more__item--active={active}
+                    role="menuitem"
+                    style={`--index: ${index}`}
+                    onclick={closeNavMore}
+                  >
+                    <Icon size={13} strokeWidth={1.55} />
+                    <span>{item.label}</span>
+                  </a>
+                {/each}
+              </div>
+            {/if}
+          </div>
+        {/if}
       </nav>
     </div>
   </header>
@@ -468,44 +589,6 @@
     display: block;
   }
 
-  .top-tabs {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    max-width: min(690px, 46vw);
-    padding: 4px;
-    overflow-x: auto;
-    border: 1px solid rgba(255, 255, 255, 0.065);
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.04);
-  }
-
-  .top-tabs a {
-    flex: 0 0 auto;
-    padding: 7px 14px;
-    border-radius: 999px;
-    color: var(--color-foreground-secondary);
-    font-size: 0.76rem;
-    font-weight: 650;
-    line-height: 1;
-    text-decoration: none;
-    transition: color 0.2s, background 0.2s, transform 0.2s;
-  }
-
-  .top-tabs a:hover {
-    color: var(--color-foreground);
-    background: rgba(255, 255, 255, 0.045);
-  }
-
-  .top-tabs a.top-tabs__item--active {
-    color: #050507;
-    background: var(--color-foreground);
-    box-shadow: 0 1px 8px rgba(255, 255, 255, 0.08);
-  }
-
   .header-actions {
     display: flex;
     align-items: center;
@@ -520,6 +603,8 @@
     background: rgba(255, 255, 255, 0.035);
     color: var(--color-foreground-secondary);
     cursor: pointer;
+    font: inherit;
+    text-decoration: none;
     transition: color 0.22s cubic-bezier(0.16, 1, 0.3, 1),
       background 0.22s cubic-bezier(0.16, 1, 0.3, 1),
       border-color 0.22s cubic-bezier(0.16, 1, 0.3, 1),
@@ -558,6 +643,205 @@
     font-family: var(--font-mono);
     font-size: 0.6rem;
     line-height: 16px;
+  }
+
+  .notification-wrap {
+    position: relative;
+    display: inline-flex;
+  }
+
+  .notification-popover {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    z-index: 35;
+    width: min(344px, calc(100vw - 32px));
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    background:
+      linear-gradient(155deg, rgba(255, 255, 255, 0.092), rgba(255, 255, 255, 0.026)),
+      linear-gradient(180deg, rgba(13, 14, 22, 0.96), rgba(9, 9, 14, 0.94));
+    box-shadow:
+      0 22px 70px rgba(0, 0, 0, 0.42),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(18px);
+    transform-origin: top right;
+    animation: notification-popover-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .notification-popover::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    background:
+      radial-gradient(circle at 16% 0%, rgba(1, 250, 251, 0.11), transparent 36%),
+      radial-gradient(circle at 100% 10%, rgba(255, 0, 255, 0.09), transparent 34%);
+    opacity: 0.85;
+  }
+
+  .notification-popover__header,
+  .notification-popover__list {
+    position: relative;
+    z-index: 1;
+  }
+
+  .notification-popover__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 4px 4px 10px;
+  }
+
+  .notification-popover__header span,
+  .notification-popover__header small,
+  .notification-popover__header strong {
+    display: block;
+  }
+
+  .notification-popover__header small {
+    color: var(--color-foreground-disabled);
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    font-weight: 780;
+    letter-spacing: 0.12em;
+    line-height: 1.35;
+    text-transform: uppercase;
+  }
+
+  .notification-popover__header strong {
+    margin-top: 2px;
+    color: var(--color-foreground);
+    font-size: 0.9rem;
+    font-weight: 760;
+    letter-spacing: 0;
+    line-height: 1.1;
+  }
+
+  .notification-popover__header em {
+    flex: 0 0 auto;
+    padding: 5px 8px;
+    border: 1px solid rgba(1, 250, 251, 0.14);
+    border-radius: 999px;
+    background: rgba(1, 250, 251, 0.075);
+    color: var(--color-primary);
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    font-style: normal;
+    font-weight: 760;
+    line-height: 1;
+  }
+
+  .notification-popover__status--empty {
+    border-color: rgba(255, 255, 255, 0.075) !important;
+    background: rgba(255, 255, 255, 0.035) !important;
+    color: var(--color-foreground-muted) !important;
+  }
+
+  .notification-popover__list {
+    display: grid;
+    gap: 7px;
+  }
+
+  .notification-task {
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    min-height: 72px;
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.065);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.035);
+    color: var(--color-foreground);
+    text-decoration: none;
+    transition:
+      transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+      background 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .notification-task:hover {
+    border-color: rgba(1, 250, 251, 0.2);
+    background: rgba(1, 250, 251, 0.07);
+    transform: translateY(-1px);
+  }
+
+  .notification-task__icon,
+  .notification-empty span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid rgba(1, 250, 251, 0.14);
+    border-radius: 999px;
+    background: rgba(1, 250, 251, 0.075);
+    color: var(--color-primary);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  .notification-task__body {
+    min-width: 0;
+  }
+
+  .notification-task__body strong,
+  .notification-task__body small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .notification-task__body strong {
+    color: var(--color-foreground);
+    font-size: 0.78rem;
+    font-weight: 760;
+    line-height: 1.25;
+  }
+
+  .notification-task__body small {
+    margin-top: 4px;
+    color: var(--color-foreground-secondary);
+    font-size: 0.7rem;
+    line-height: 1.35;
+  }
+
+  .notification-task__action {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    color: var(--color-foreground);
+    font-size: 0.66rem;
+    font-weight: 760;
+    white-space: nowrap;
+  }
+
+  .notification-empty {
+    display: grid;
+    justify-items: center;
+    gap: 8px;
+    min-height: 132px;
+    padding: 20px 18px 18px;
+    border: 1px dashed rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.026);
+    text-align: center;
+  }
+
+  .notification-empty strong {
+    color: var(--color-foreground);
+    font-size: 0.8rem;
+    font-weight: 760;
+  }
+
+  .notification-empty small {
+    max-width: 240px;
+    color: var(--color-foreground-secondary);
+    font-size: 0.7rem;
+    line-height: 1.45;
   }
 
   .user-chip {
@@ -682,50 +966,38 @@
   }
 
   .nav-ribbon {
+    position: relative;
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 8px 0 12px;
-    overflow-x: auto;
+    flex-wrap: nowrap;
+    gap: 6px;
+    padding: 5px 0 8px;
+    overflow: hidden;
     border-top: 1px solid rgba(255, 255, 255, 0.055);
   }
 
-  .nav-ribbon__group {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    flex: 0 0 auto;
-  }
-
-  .nav-ribbon__label {
-    color: var(--color-foreground-disabled);
-    font-family: var(--font-mono);
-    font-size: 0.56rem;
-    font-weight: 700;
-    letter-spacing: 0.11em;
-    text-transform: uppercase;
-  }
-
-  .nav-ribbon__items {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
   .nav-pill {
+    appearance: none;
     display: inline-flex;
     align-items: center;
-    gap: 7px;
-    min-height: 32px;
-    padding: 0 10px;
+    flex: 0 0 auto;
+    gap: 6px;
+    min-height: 28px;
+    padding: 0 8px;
     border: 1px solid rgba(255, 255, 255, 0.055);
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.025);
     color: var(--color-foreground-secondary);
-    font-size: 0.75rem;
-    font-weight: 640;
+    font-size: 0.68rem;
+    font-weight: 660;
+    line-height: 1;
     text-decoration: none;
+    cursor: pointer;
     transition: color 0.2s, background 0.2s, border-color 0.2s, transform 0.2s;
+  }
+
+  .nav-pill span {
+    white-space: nowrap;
   }
 
   .nav-pill:hover {
@@ -741,17 +1013,109 @@
   }
 
   .nav-pill em {
-    min-width: 17px;
-    height: 17px;
-    padding: 0 5px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
     border-radius: 999px;
     background: var(--color-danger);
     color: var(--color-foreground);
     font-family: var(--font-mono);
-    font-size: 0.58rem;
+    font-size: 0.56rem;
     font-style: normal;
-    line-height: 17px;
+    line-height: 16px;
     text-align: center;
+  }
+
+  .nav-more {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    flex: 1 1 0;
+    min-width: 0;
+    gap: 5px;
+    overflow: hidden;
+  }
+
+  .nav-pill--more {
+    font-family: inherit;
+    overflow: visible;
+  }
+
+  .nav-pill--more :global(.nav-more__chevron) {
+    margin-left: -2px;
+    opacity: 0.55;
+    transform: translateX(0);
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .nav-pill--more[aria-expanded='true'] :global(.nav-more__chevron) {
+    opacity: 0.95;
+    transform: translateX(2px);
+  }
+
+  .nav-more__menu {
+    position: static;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 100%;
+    gap: 4px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    white-space: nowrap;
+    transform-origin: left center;
+    animation: nav-more-slide 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .nav-more__menu::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav-more__item {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 1 92px;
+    gap: 5px;
+    min-height: 28px;
+    min-width: 0;
+    max-width: 96px;
+    padding: 0 7px;
+    border: 1px solid rgba(255, 255, 255, 0.055);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.024);
+    color: var(--color-foreground-secondary);
+    font-size: 0.64rem;
+    font-weight: 650;
+    line-height: 1;
+    text-decoration: none;
+    opacity: 0;
+    transform: translateX(-6px);
+    animation: nav-more-item-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: calc(var(--index) * 22ms);
+    transition: color 0.2s, background 0.2s, border-color 0.2s, transform 0.2s;
+  }
+
+  .nav-more__item span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .nav-more__item:hover {
+    color: var(--color-foreground);
+    border-color: rgba(255, 255, 255, 0.09);
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateY(-1px);
+  }
+
+  .nav-more__item--active {
+    color: var(--color-foreground);
+    border-color: rgba(31, 224, 229, 0.18);
+    background: rgba(31, 224, 229, 0.09);
+    opacity: 1;
   }
 
   .main {
@@ -873,6 +1237,43 @@
     }
   }
 
+  @keyframes nav-more-slide {
+    from {
+      opacity: 0;
+      filter: blur(4px);
+      transform: translate3d(-10px, 0, 0) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      filter: blur(0);
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+  }
+
+  @keyframes nav-more-item-in {
+    from {
+      opacity: 0;
+      transform: translateX(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes notification-popover-in {
+    from {
+      opacity: 0;
+      filter: blur(5px);
+      transform: translate3d(0, -8px, 0) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      filter: blur(0);
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+  }
+
   @keyframes depth-tab-drift {
     0%,
     100% {
@@ -880,20 +1281,6 @@
     }
     50% {
       translate: 0 -7px;
-    }
-  }
-
-  @media (max-width: 1120px) {
-    .app-header__top {
-      flex-wrap: wrap;
-    }
-
-    .top-tabs {
-      position: static;
-      order: 3;
-      transform: none;
-      width: 100%;
-      max-width: none;
     }
   }
 
@@ -925,8 +1312,7 @@
     }
 
     .user-chip__meta,
-    .global-search kbd,
-    .nav-ribbon__label {
+    .global-search kbd {
       display: none;
     }
 
@@ -935,21 +1321,43 @@
       padding: 2px;
     }
 
-    .nav-ribbon {
-      gap: 8px;
-      padding-bottom: 10px;
+    .notification-popover {
+      position: fixed;
+      top: 58px;
+      right: 12px;
+      width: calc(100vw - 24px);
+      transform-origin: top right;
     }
 
-    .nav-ribbon__group,
-    .nav-ribbon__items {
+    .nav-ribbon {
       gap: 6px;
+      padding-bottom: 10px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .nav-ribbon::-webkit-scrollbar {
+      display: none;
+    }
+
+    .nav-pill {
+      min-height: 28px;
+      padding: 0 8px;
+      font-size: 0.68rem;
+    }
+
+    .nav-more__menu {
+      white-space: nowrap;
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
     .admin-shell::before,
     .admin-shell::after,
-    .admin-depth-tabs span {
+    .admin-depth-tabs span,
+    .nav-more__menu,
+    .nav-more__item,
+    .notification-popover {
       animation: none;
     }
 
