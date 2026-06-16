@@ -69,14 +69,5 @@ describe('DASH-01: metricas globais carregadas no dashboard', () => {
     expect(result.initialError).toContain('dashboard');
   });
 
-  it.todo('metricas de TPV, volume e merchants sao exibidas'); // requer render de componente
-});
-
-describe('DASH-02: grafico de receita por periodo', () => {
-  it.todo('filtro de periodo atualiza dados do grafico'); // requer render de componente
-  it.todo('grafico renderiza com chart.js/svelte5-chartjs'); // requer render de componente
-});
-
-describe('DASH-03: atualizacao automatica de metricas', () => {
-  it.todo('metricas sao recarregadas apos intervalo configurado'); // requer render de componente
+  // Render de componente (DASH-01/02/03) coberto em dashboard.render.svelte.test.ts.
 });
