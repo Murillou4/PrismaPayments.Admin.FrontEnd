@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { formatCurrency } from '$appmod/shared/utils/formatters';
+import { load as rootLoad } from '../../../routes/+page.server';
 
 describe('INFRA-08: formatCurrency', () => {
   it('converte centavos para BRL pt-BR (1000 centavos = R$ 10,00)', () => {
@@ -46,7 +47,12 @@ describe('INFRA-06: Error boundary', () => {
 });
 
 describe('INFRA-07: redirect de /', () => {
-  it.todo('+page.server.ts lança redirect(302, /dashboard)');
+  it('+page.server.ts lança redirect(302, /dashboard)', async () => {
+    await expect(rootLoad({} as unknown as Parameters<typeof rootLoad>[0])).rejects.toMatchObject({
+      status: 302,
+      location: '/dashboard'
+    });
+  });
 });
 
 describe('INFRA-01: DataTable', () => {
