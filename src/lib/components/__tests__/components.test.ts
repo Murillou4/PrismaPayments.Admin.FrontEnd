@@ -26,21 +26,16 @@ describe('INFRA-08: formatCurrency', () => {
   });
 });
 
-// INFRA-03 (StatusBadge) coberto em src/app/shared/widgets/__tests__/StatusBadge.svelte.test.ts
-
-describe('INFRA-04: ConfirmDialog', () => {
-  it.todo('confirm button desabilitado quando requiresReason=true e reason vazio');
-  it.todo('confirm button habilitado quando requiresReason=true e reason preenchido');
-  it.todo('onconfirm chamado com reason quando requiresReason=true');
-});
+// Testes de render (rodam no project "client"):
+//  - INFRA-03 StatusBadge   -> src/app/shared/widgets/__tests__/StatusBadge.svelte.test.ts
+//  - INFRA-04 ConfirmDialog  -> src/app/shared/widgets/__tests__/ConfirmDialog.svelte.test.ts
+//  - INFRA-01 DataTable      -> src/app/shared/widgets/__tests__/DataTable.svelte.test.ts
+//  - INFRA-06 Error boundary -> src/routes/__tests__/ErrorBoundary.svelte.test.ts
 
 describe('INFRA-05: Toast (svelte-sonner)', () => {
+  // Pendente: exige montar o Toaster e observar o portal de notificacoes (flaky).
   it.todo('Toaster montado no layout admin via plan 02');
   it.todo('toast.success() dispara notificação');
-});
-
-describe('INFRA-06: Error boundary', () => {
-  it.todo('+error.svelte renderiza $page.error.message');
 });
 
 describe('INFRA-07: redirect de /', () => {
@@ -50,12 +45,4 @@ describe('INFRA-07: redirect de /', () => {
       location: '/dashboard'
     });
   });
-});
-
-describe('INFRA-01: DataTable', () => {
-  it.todo('renderiza N linhas para N items de data');
-  it.todo('paginação prev/next atualiza currentPage');
-  it.todo('empty state exibe "Nenhum resultado" quando data vazio');
-  it.todo('loading=true exibe skeleton rows');
-  it.todo('coluna com sorting ativa mostra ChevronUp/Down');
 });
