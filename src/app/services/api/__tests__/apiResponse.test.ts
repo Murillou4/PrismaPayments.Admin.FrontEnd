@@ -63,3 +63,50 @@ describe('apiResponse parser', () => {
     if (!result.ok) expect(result.failure.code).toBe('RATE_LIMITED');
   });
 });
+
+// Regressao: o backend OMITE `extendedResultCode` em respostas de sucesso (so
+// inclui em erros). Exigi-lo no shape guard fazia o envelope inteiro vazar como
+// `data`, travando todas as telas de detalhe em "Carregando...".
+describe('regressao: envelope de sucesso sem extendedResultCode', () => {
+  const successEnvelope = {
+    responseType: 'OK',
+    message: 'Operacao realizada com sucesso',
+    title: 'Sucesso',
+    status: 200,
+    data: { id: 'mch_1', legalName: 'Acme Ltda' },
+    date: '2026-06-16T00:00:00.000Z'
+  };
+
+  it('reconhece o envelope e desempacota .data mesmo sem extendedResultCode', () => {
+    const parsed = parseApiResponse<{ id: string; legalName: string }>(successEnvelope, 200);
+
+    expect(parsed.data).toEqual({ id: 'mch_1', legalName: 'Acme Ltda' });
+    expect(parsed.extendedResultCode).toBe('OK');
+  });
+
+  it('apiResponseToEither devolve a entidade, nao o envelope inteiro', () => {
+    const result = apiResponseToEither(parseApiResponse(successEnvelope, 200));
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value).toEqual({ id: 'mch_1', legalName: 'Acme Ltda' });
+      expect(result.value).not.toHaveProperty('responseType');
+    }
+  });
+
+  it('ainda reconhece envelope de erro que inclui extendedResultCode', () => {
+    const parsed = parseApiResponse({
+      responseType: 'NOT_FOUND',
+      message: 'Rota nao encontrada',
+      title: 'Nao Encontrado',
+      status: 404,
+      data: null,
+      extendedResultCode: 'ROUTE_NOT_FOUND',
+      date: '2026-06-16T00:00:00.000Z'
+    }, 404);
+
+    expect(parsed.status).toBe(404);
+    expect(parsed.extendedResultCode).toBe('ROUTE_NOT_FOUND');
+    expect(failureFromApiResponse(parsed).code).toBe('NOT_FOUND');
+  });
+});
