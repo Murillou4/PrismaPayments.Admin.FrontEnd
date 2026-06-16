@@ -15,6 +15,7 @@ export default defineConfig({
           name: 'client',
           environment: 'jsdom',
           globals: true,
+          setupFiles: ['./vitest-setup-client.ts'],
           include: ['src/**/*.svelte.{test,spec}.{js,ts}']
         }
       },

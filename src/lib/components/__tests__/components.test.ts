@@ -31,12 +31,7 @@ describe('INFRA-08: formatCurrency', () => {
 //  - INFRA-04 ConfirmDialog  -> src/app/shared/widgets/__tests__/ConfirmDialog.svelte.test.ts
 //  - INFRA-01 DataTable      -> src/app/shared/widgets/__tests__/DataTable.svelte.test.ts
 //  - INFRA-06 Error boundary -> src/routes/__tests__/ErrorBoundary.svelte.test.ts
-
-describe('INFRA-05: Toast (svelte-sonner)', () => {
-  // Pendente: exige montar o Toaster e observar o portal de notificacoes (flaky).
-  it.todo('Toaster montado no layout admin via plan 02');
-  it.todo('toast.success() dispara notificação');
-});
+//  - INFRA-05 Toast          -> src/lib/components/__tests__/Toast.svelte.test.ts
 
 describe('INFRA-07: redirect de /', () => {
   it('+page.server.ts lança redirect(302, /dashboard)', async () => {
