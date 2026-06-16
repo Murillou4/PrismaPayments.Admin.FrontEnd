@@ -3,7 +3,7 @@ import { apiClient } from '$appmod/services/api/apiClient';
 import { API_PATHS } from '$core/constants/apiPaths';
 import { adminQueryKeys } from '$appmod/services/cache/adminQueryKeys';
 import { executeAdminMutation, fetchAdminQuery } from '$appmod/services/cache/adminQuery';
-import { normalizeCollectionResponse } from '$appmod/services/api/responseNormalizers';
+import { normalizeArrayResponse, normalizeCollectionResponse } from '$appmod/services/api/responseNormalizers';
 import type { IMerchantRepository } from '../../domain/repositories/IMerchantRepository';
 import type {
   PaginatedMerchants,
@@ -83,8 +83,14 @@ export class MerchantRepository implements IMerchantRepository {
   }
 
   async updateVerification(id: string, payload: MerchantVerificationUpdate): Promise<Either<Failure, Merchant>> {
+    // O endpoint espera { verificationStatus, notes } com os valores do enum do
+    // backend (VERIFIED/REJECTED), não o { status: APPROVED } do domínio do admin.
+    const body = {
+      verificationStatus: payload.status === 'APPROVED' ? 'VERIFIED' : 'REJECTED',
+      notes: payload.notes
+    };
     return executeAdminMutation(
-      () => apiClient.put<Merchant>(API_PATHS.ADMIN_MERCHANT_VERIFICATION(id), payload),
+      () => apiClient.put<Merchant>(API_PATHS.ADMIN_MERCHANT_VERIFICATION(id), body),
       [
         adminQueryKeys.merchants.all,
         adminQueryKeys.merchants.detail(id),
@@ -129,9 +135,15 @@ export class MerchantRepository implements IMerchantRepository {
   }
 
   async listTenants(): Promise<Either<Failure, Tenant[]>> {
-    return fetchAdminQuery(
+    const result = await fetchAdminQuery(
       adminQueryKeys.merchants.tenants(),
-      () => apiClient.get<Tenant[]>(API_PATHS.ADMIN_TENANTS)
+      () => apiClient.get<unknown>(API_PATHS.ADMIN_TENANTS)
     );
+
+    // ADMIN_TENANTS responde como coleção paginada ({ data: { items } }),
+    // não como array puro; normalizamos para extrair os itens.
+    return result.ok
+      ? { ok: true, value: normalizeArrayResponse<Tenant>(result.value) }
+      : result;
   }
 }
