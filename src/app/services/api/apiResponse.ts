@@ -44,13 +44,16 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function hasRouteMessageShape(value: unknown): value is ApiResponse<unknown> {
   if (!isRecord(value)) return false;
+  // `extendedResultCode` é opcional: o backend o inclui em respostas de erro,
+  // mas o omite nas de sucesso. Exigi-lo fazia o envelope de sucesso não ser
+  // reconhecido e vazar inteiro como `data` (quebrando telas de detalhe).
   return (
     typeof value.responseType === 'string' &&
     typeof value.message === 'string' &&
     typeof value.title === 'string' &&
     typeof value.status === 'number' &&
     'data' in value &&
-    typeof value.extendedResultCode === 'string' &&
+    (value.extendedResultCode === undefined || typeof value.extendedResultCode === 'string') &&
     typeof value.date === 'string'
   );
 }
@@ -99,6 +102,7 @@ export function parseApiResponse<T>(
     return {
       ...rawBody,
       status: rawBody.status || status,
+      extendedResultCode: rawBody.extendedResultCode ?? responseTypeFromStatus(rawBody.status || status),
       data: (rawBody.data ?? null) as T | null
     };
   }

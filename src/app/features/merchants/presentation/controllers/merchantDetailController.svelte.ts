@@ -73,13 +73,18 @@ export function createMerchantDetailController(merchantId: string) {
   async function loadMerchant() {
     state.loading = true;
     state.error = null;
-    const result = await service.getById(merchantId);
-    if (result.ok) {
-      state.merchant = result.value;
-    } else {
-      state.error = result.failure.message;
+    try {
+      const result = await service.getById(merchantId);
+      if (result.ok) {
+        state.merchant = result.value;
+      } else {
+        state.error = result.failure.message;
+      }
+    } catch (e) {
+      state.error = e instanceof Error ? e.message : 'Erro ao carregar merchant.';
+    } finally {
+      state.loading = false;
     }
-    state.loading = false;
   }
 
   /** Carrega documentos KYC — lazy, só na 1ª vez */
