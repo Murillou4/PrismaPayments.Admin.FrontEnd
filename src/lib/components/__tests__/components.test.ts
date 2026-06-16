@@ -2,6 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { formatCurrency } from '$appmod/shared/utils/formatters';
 import { load as rootLoad } from '../../../routes/+page.server';
 
+// Testes que exigem render de componente (StatusBadge, DataTable, ConfirmDialog)
+// vivem em arquivos *.svelte.test.ts e rodam no project "client" do Vitest.
+
 describe('INFRA-08: formatCurrency', () => {
   it('converte centavos para BRL pt-BR (1000 centavos = R$ 10,00)', () => {
     const result = formatCurrency(1000);
@@ -23,13 +26,7 @@ describe('INFRA-08: formatCurrency', () => {
   });
 });
 
-describe('INFRA-03: StatusBadge color map', () => {
-  it.todo('status ACTIVE exibe cor #00E676 (green)');
-  it.todo('status PENDING exibe cor #FFB300 (warning)');
-  it.todo('status BLOCKED exibe cor #FF3B5C (danger)');
-  it.todo('status MED tem classe status-badge--med com animação pulse');
-  it.todo('status desconhecido usa cor padrão #9090A8');
-});
+// INFRA-03 (StatusBadge) coberto em src/app/shared/widgets/__tests__/StatusBadge.svelte.test.ts
 
 describe('INFRA-04: ConfirmDialog', () => {
   it.todo('confirm button desabilitado quando requiresReason=true e reason vazio');
