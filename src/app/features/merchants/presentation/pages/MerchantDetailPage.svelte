@@ -34,26 +34,31 @@
   }
 
   // ── Configurações form state ──────────────────────────────────
-  let settingsWebhookUrl   = $state('');
-  let settingsWithdrawal   = $state('');
-  let settingsAutoWithdraw = $state(false);
+  let settingsWebhookUrl    = $state('');
+  let settingsWithdrawal    = $state('');
+  let settingsAutoWithdraw  = $state(false);
+  let settingsAutoThreshold = $state('');
+  let settingsTwoFactor     = $state(false);
 
   // Sync form quando merchant carrega
   $effect(() => {
-    if (ctrl.state.merchant?.settings) {
-      settingsWebhookUrl   = ctrl.state.merchant.settings.webhookUrl   ?? '';
-      settingsWithdrawal   = ctrl.state.merchant.settings.withdrawalLimit
-        ? String(ctrl.state.merchant.settings.withdrawalLimit / 100)
-        : '';
-      settingsAutoWithdraw = ctrl.state.merchant.settings.autoWithdrawal;
+    const s = ctrl.state.merchant?.settings;
+    if (s) {
+      settingsWebhookUrl    = s.webhookUrl ?? '';
+      settingsWithdrawal    = s.dailyWithdrawalLimit ? String(s.dailyWithdrawalLimit / 100) : '';
+      settingsAutoWithdraw  = s.autoWithdrawalEnabled;
+      settingsAutoThreshold = s.autoWithdrawalThreshold ? String(s.autoWithdrawalThreshold / 100) : '';
+      settingsTwoFactor     = s.twoFactorEnabled ?? false;
     }
   });
 
   async function handleSaveSettings() {
     await ctrl.updateSettings({
-      webhookUrl:      settingsWebhookUrl  || undefined,
-      withdrawalLimit: settingsWithdrawal  ? Math.round(parseFloat(settingsWithdrawal) * 100) : undefined,
-      autoWithdrawal:  settingsAutoWithdraw
+      webhookUrl:              settingsWebhookUrl || undefined,
+      dailyWithdrawalLimit:    settingsWithdrawal ? Math.round(parseFloat(settingsWithdrawal) * 100) : undefined,
+      autoWithdrawalEnabled:   settingsAutoWithdraw,
+      autoWithdrawalThreshold: settingsAutoThreshold ? Math.round(parseFloat(settingsAutoThreshold) * 100) : undefined,
+      twoFactorEnabled:        settingsTwoFactor
     });
   }
 </script>
@@ -246,6 +251,32 @@
               />
               <label class="form-label form-label--inline" for="autoWithdrawal">
                 Saque automático habilitado
+              </label>
+            </div>
+
+            <div class="form-field">
+              <label class="form-label" for="autoWithdrawalThreshold">Limite p/ Saque Automático (R$)</label>
+              <Input
+                id="autoWithdrawalThreshold"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0,00"
+                bind:value={settingsAutoThreshold}
+                disabled={!isAdmin || !settingsAutoWithdraw}
+              />
+            </div>
+
+            <div class="form-field form-field--checkbox">
+              <input
+                id="twoFactorEnabled"
+                type="checkbox"
+                class="checkbox"
+                bind:checked={settingsTwoFactor}
+                disabled={!isAdmin}
+              />
+              <label class="form-label form-label--inline" for="twoFactorEnabled">
+                Autenticação de dois fatores exigida
               </label>
             </div>
 

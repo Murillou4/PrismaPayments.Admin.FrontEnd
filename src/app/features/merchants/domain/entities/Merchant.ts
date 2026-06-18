@@ -44,8 +44,14 @@ export interface MerchantBalance {
 // ── Settings (sub-objeto do detalhe) ──────────────────────────
 export interface MerchantSettings {
   webhookUrl: string | null;
-  withdrawalLimit: number | null; // em centavos
-  autoWithdrawal: boolean;
+  webhookEnabled?: boolean;
+  webhookSecretConfigured?: boolean;
+  twoFactorEnabled?: boolean;
+  dailyWithdrawalLimit: number | null; // em centavos
+  autoWithdrawalEnabled: boolean;
+  autoWithdrawalThreshold?: number | null; // em centavos
+  defaultPayoutDestinationId?: string | null;
+  payoutDestinationCount?: number;
 }
 
 // ── Detalhe completo (GET /admin/merchants/{id}) ──────────────
@@ -133,8 +139,10 @@ export interface MerchantVerificationUpdate {
 
 export interface MerchantSettingsUpdate {
   webhookUrl?: string;
-  withdrawalLimit?: number;
-  autoWithdrawal?: boolean;
+  twoFactorEnabled?: boolean;
+  dailyWithdrawalLimit?: number;
+  autoWithdrawalEnabled?: boolean;
+  autoWithdrawalThreshold?: number;
 }
 
 export interface CreateCredentialPayload {
