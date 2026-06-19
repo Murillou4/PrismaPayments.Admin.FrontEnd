@@ -67,7 +67,19 @@ const cases: PayloadCase[] = [
   // AdminUsersRepository.update → UpdateAdminUserPayload
   { label: 'admin user update', path: API_PATHS.ADMIN_USER('{id}'), method: 'put', sends: ['name', 'role', 'isActive'] },
   // PlatformRepository.toggleRateLimit → ToggleRateLimitPayload
-  { label: 'rate limit toggle', path: API_PATHS.ADMIN_RATE_LIMIT, method: 'put', sends: ['enabled', 'ttlMinutes'] }
+  { label: 'rate limit toggle', path: API_PATHS.ADMIN_RATE_LIMIT, method: 'put', sends: ['enabled', 'ttlMinutes'] },
+  // MerchantRepository.create → CreateMerchantPayload
+  { label: 'merchant create', path: API_PATHS.ADMIN_MERCHANTS, method: 'post', sends: ['legalName', 'tradeName', 'documentNumber', 'documentType', 'email', 'phone', 'password', 'tenantId', 'status', 'verificationStatus'] },
+  // TenantRepository.create → tenantFormData (branding achatado mapeia p/ o objeto `branding`)
+  { label: 'tenant create', path: API_PATHS.ADMIN_TENANTS, method: 'post', sends: ['name', 'slug', 'branding'] },
+  // DisputeRepository.resolveDispute → ResolveDisputePayload
+  { label: 'dispute resolve', path: API_PATHS.ADMIN_DISPUTE('{id}'), method: 'put', sends: ['resolution', 'status'] },
+  // FeeRepository.create → FeeRulePayload (backend não aceita isActive no create)
+  { label: 'fee rule create', path: API_PATHS.FEES_RULES, method: 'post', sends: ['merchantId', 'feeType', 'calculation', 'percentageRate', 'fixedAmount', 'minFee', 'maxFee'] },
+  // FeeRepository.update → Partial<FeeRulePayload>
+  { label: 'fee rule update', path: API_PATHS.FEES_RULE('{id}'), method: 'put', sends: ['feeType', 'calculation', 'percentageRate', 'fixedAmount', 'minFee', 'maxFee', 'isActive'] },
+  // FeeRepository.simulate → FeeSimulationPayload
+  { label: 'fee simulate', path: API_PATHS.FEES_SIMULATE, method: 'post', sends: ['feeType', 'amount', 'merchantId'] }
 ];
 
 describe('Admin write payloads contract', () => {

@@ -70,7 +70,7 @@ function responseProps(path: string, method: string, opts: UnwrapOpts = {}): str
 interface ResponseCase {
   label: string;
   path: string;
-  method: 'get';
+  method: 'get' | 'post';
   opts?: UnwrapOpts;
   /** Campos obrigatórios que o front lê da entidade. */
   reads: string[];
@@ -115,12 +115,49 @@ const cases: ResponseCase[] = [
     opts: { list: true },
     reads: ['id', 'name', 'email', 'role', 'twoFactorEnabled', 'isActive', 'createdAt', 'updatedAt']
   },
-  // RateLimitStatus (Platform.ts) — só `enabled` é obrigatório
+  // RateLimitStatus (Platform.ts) — só `enabled` é obrigatório (response tem
+  // shape variável; demais campos são opcionais e tolerantes a ausência)
   {
     label: 'rate limit status',
     path: API_PATHS.ADMIN_RATE_LIMIT,
     method: 'get',
     reads: ['enabled']
+  },
+  // Dispute (Dispute.ts) — detalhe operacional
+  {
+    label: 'dispute detail',
+    path: API_PATHS.ADMIN_DISPUTE('{id}'),
+    method: 'get',
+    reads: ['id', 'paymentId', 'merchantId', 'disputeType', 'status', 'amount', 'openedAt', 'createdAt', 'updatedAt']
+  },
+  // FeeRule (Fee.ts) — item da listagem de regras
+  {
+    label: 'fee rule list item',
+    path: API_PATHS.FEES_RULES,
+    method: 'get',
+    opts: { list: true },
+    reads: ['id', 'feeType', 'calculation', 'percentageRate', 'fixedAmount', 'isActive', 'createdAt', 'updatedAt']
+  },
+  // FeeSimulationResult (Fee.ts) — resposta do POST de simulação
+  {
+    label: 'fee simulation result',
+    path: API_PATHS.FEES_SIMULATE,
+    method: 'post',
+    reads: ['grossAmount', 'feeAmount', 'netAmount']
+  },
+  // Payment (Payment.ts) — detalhe de pagamento
+  {
+    label: 'payment detail',
+    path: API_PATHS.ADMIN_PAYMENT('{id}'),
+    method: 'get',
+    reads: ['id', 'merchantId', 'method', 'status', 'amount', 'feeAmount', 'netAmount', 'currency', 'isTest', 'createdAt', 'updatedAt']
+  },
+  // Withdrawal (Withdrawal.ts) — detalhe de saque
+  {
+    label: 'withdrawal detail',
+    path: API_PATHS.ADMIN_WITHDRAWAL('{id}'),
+    method: 'get',
+    reads: ['id', 'merchantId', 'status', 'amount', 'feeAmount', 'netAmount', 'currency', 'recipient', 'createdAt', 'updatedAt']
   }
 ];
 
