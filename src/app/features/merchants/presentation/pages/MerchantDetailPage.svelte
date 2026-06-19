@@ -217,6 +217,28 @@
       <TabsContent value="settings">
         <div class="tab-content">
           <div class="settings-form">
+            {#if ctrl.state.merchant?.settings}
+              {@const s = ctrl.state.merchant.settings}
+              <div class="settings-status">
+                <div class="balance-card">
+                  <span class="balance-label">WEBHOOK</span>
+                  <span class="balance-value">{s.webhookEnabled ? 'Ativo' : 'Inativo'}</span>
+                </div>
+                <div class="balance-card">
+                  <span class="balance-label">SEGREDO DO WEBHOOK</span>
+                  <span class="balance-value">{s.webhookSecretConfigured ? 'Configurado' : 'Não configurado'}</span>
+                </div>
+                <div class="balance-card">
+                  <span class="balance-label">DESTINOS DE SAQUE</span>
+                  <span class="balance-value">{s.payoutDestinationCount ?? 0}</span>
+                </div>
+                <div class="balance-card">
+                  <span class="balance-label">DESTINO PADRÃO</span>
+                  <span class="balance-value">{s.defaultPayoutDestinationId ?? '—'}</span>
+                </div>
+              </div>
+            {/if}
+
             <div class="form-field">
               <label class="form-label" for="webhookUrl">Webhook URL</label>
               <Input
@@ -584,6 +606,15 @@
     flex-direction: column;
     gap: 16px;
     max-width: 480px;
+  }
+  .settings-status {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .settings-status .balance-value {
+    font-size: 1rem;
+    word-break: break-word;
   }
   .form-field {
     display: flex;
